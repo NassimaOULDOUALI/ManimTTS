@@ -4,7 +4,7 @@
 
 # Tous les fichiers de sortie Manim
 tts_ssml_manim_video/media/
-
+code_artifacts/tts_ssml_manim_video/media/
 # Fichiers spécifiques
 tts_ssml_manim_video/video_final_10min.mp4
 tts_ssml_manim_video/videos_list.txt
