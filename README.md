@@ -172,12 +172,7 @@ See `qc_report.md` for detailed verification that:
 
 ## 👥 Authors
 
-- Nassima Ould Ouali (École Polytechnique)
-- Awais Hussain Sani (Hi! PARIS Research Center)
-- Tim Luka Horstmann (Hi! PARIS Research Center)
-- Ruben Bueno (École Polytechnique)
-- Jonah Dauvet (McGill University)
-- Eric Moulines (École Polytechnique)
+- Nassima Ould Ouali 
 
 ## 📄 License
 
