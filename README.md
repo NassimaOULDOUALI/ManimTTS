@@ -176,7 +176,7 @@ See `qc_report.md` for detailed verification that:
 
 ## 📄 License
 
-This video project is created for educational purposes based on published research.
+This project is licensed under the MIT License. 
 
 ---
 
