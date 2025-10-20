@@ -1,0 +1,10 @@
+# This file is used internally by FFMPEG.
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/3900156470_1017836837_223132457.mp4'
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/95729348_4071516364_2349398719.mp4'
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/95729348_2815542564_2342269135.mp4'
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/95729348_4071516364_2758508421.mp4'
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/95729348_1288504798_4196548628.mp4'
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/95729348_4071516364_443826042.mp4'
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/95729348_937214572_3316524639.mp4'
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/95729348_1175890402_4027137546.mp4'
+file 'file:/home/ids/ext-3478/ManimTTS/Manim_TTS/code_artifacts/tts_ssml_manim_video/media/videos/main/1080p60/partial_movie_files/SceneIntro/95729348_3759473747_3778017800.mp4'
