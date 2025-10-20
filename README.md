@@ -136,13 +136,6 @@ All data is sourced from the provided files with zero hallucination:
 - Spectrogram: 20-30ms windows, ~10ms hop, Hann window
 - Pitch: Related to F₀ (fundamental frequency)
 
-## 🔍 Anti-Hallucination Measures
-
-1. **Source Tracking**: Every data point tracked in `citations.jsonl`
-2. **On-Screen Citations**: "Données : ICNLSP 2025, p. X" or "D'après le cours (slide X)"
-3. **Data Extraction Log**: `extracted_data/data_extraction.json`
-4. **QC Report**: `qc_report.md` verifies all numbers against sources
-
 ## 📝 Citation Summary
 
 ### Scene-wise Source Distribution
@@ -157,17 +150,9 @@ All data is sourced from the provided files with zero hallucination:
 - **SceneEvalSubj**: PDF pages 1, 6 (Section 5.1)
 - **SceneOutro**: PDF page 8 (Sections 6-7)
 
-## 🛡️ Quality Assurance
-
-See `qc_report.md` for detailed verification that:
-- All numbers come from source files
-- No hallucinated data
-- Proper citations on every visual
-- Accurate representation of research findings
-
 ## 📚 References
 
-- **Paper**: Ould Ouali, N., et al. (2025). "Improving French Synthetic Speech Quality via SSML Prosody Control." ICNLSP 2025, Paper P25-1088.
+- **Paper**: [Improving French Synthetic Speech Quality via SSML Prosody Control](https://aclanthology.org/2025.icnlsp-1.30/) (Ouali et al., ICNLSP 2025)
 - **Code Repository**: https://github.com/hi-paris/Prosody-Control-French-TTS
 
 ## 👥 Authors
@@ -180,7 +165,6 @@ This project is licensed under the MIT License.
 
 ---
 
-**Generated**: October 2025
 **Manim Version**: Community v0.18+
 **Duration**: 600s ± 15s
 **Resolution**: 1920x1080 @ 30fps
