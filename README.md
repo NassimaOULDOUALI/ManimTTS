@@ -15,8 +15,7 @@ tts_ssml_manim_video/
 ├── extracted_data/         # Data extraction from source files
 │   └── data_extraction.json
 ├── citations.jsonl         # Complete source tracking
-├── README.md              # This file
-└── qc_report.md           # Anti-hallucination checklist
+└──README.md              # This file
 
 ```
 
