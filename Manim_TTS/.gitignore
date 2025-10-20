@@ -1,0 +1,47 @@
+# =================================
+# FICHIERS MÉDIA MANIM
+# =================================
+
+# Tous les fichiers de sortie Manim
+tts_ssml_manim_video/media/
+
+# Fichiers spécifiques
+tts_ssml_manim_video/video_final_10min.mp4
+tts_ssml_manim_video/videos_list.txt
+
+# Fichiers SVG générés (ceux que vous avez listés)
+tts_ssml_manim_video/media/texts/*
+tts_ssml_manim_video/media/videos/**/*.mp4
+tts_ssml_manim_video/media/images/**/*
+
+# =================================
+# FICHIERS SYSTÈME ET IDE
+# =================================
+.DS_Store
+.thumbs
+*.tmp
+*.swp
+*~
+
+# =================================
+# FICHIERS PYTHON
+# =================================
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+.venv/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# =================================
+# FICHIERS DE CONFIGURATION LOCAUX
+# =================================
+.env
+.local
+*.local
+settings.json
