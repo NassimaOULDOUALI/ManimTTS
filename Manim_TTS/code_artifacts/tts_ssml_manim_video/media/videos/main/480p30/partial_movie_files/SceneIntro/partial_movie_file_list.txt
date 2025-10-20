@@ -1,0 +1,10 @@
+# This file is used internally by FFMPEG.
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/1642256367_3493136792_223132457.mp4'
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/350280491_4217992463_438569090.mp4'
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/350280491_675510072_2342269135.mp4'
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/350280491_4217992463_4251077459.mp4'
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/350280491_2479033361_4196548628.mp4'
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/350280491_4217992463_4004934520.mp4'
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/350280491_1970082651_3316524639.mp4'
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/350280491_87773466_834944220.mp4'
+file 'file:/home/ubuntu/code_artifacts/tts_ssml_manim_video/media/videos/main/480p30/partial_movie_files/SceneIntro/350280491_1823836031_3772331150.mp4'

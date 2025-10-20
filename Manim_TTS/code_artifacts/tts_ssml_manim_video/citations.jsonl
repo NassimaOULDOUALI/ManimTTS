@@ -1,0 +1,41 @@
+
+{"scene": "SceneIntro", "element": "title", "source": "PDF page 1", "value": "Improving French Synthetic Speech Quality via SSML Prosody Control"}
+{"scene": "SceneIntro", "element": "authors", "source": "PDF page 1", "value": "Nassima Ould Ouali, Awais Hussain Sani, Tim Luka Horstmann, Ruben Bueno, Jonah Dauvet, Eric Moulines"}
+{"scene": "SceneIntro", "element": "conference", "source": "PDF page 1", "value": "ICNLSP 2025, P25-1088"}
+{"scene": "SceneBasics", "element": "waveform_description", "source": "PPT slide 9", "value": "Waveform with Time (s) vs Amplitude (normalized)"}
+{"scene": "SceneBasics", "element": "spectrogram_description", "source": "PPT slide 12", "value": "Spectrogram shows energy of frequencies over time"}
+{"scene": "SceneBasics", "element": "pitch_f0", "source": "PPT slide 13", "value": "Pitch related to fundamental frequency F0"}
+{"scene": "SceneBasics", "element": "window_size", "source": "PPT slide 22", "value": "20-30 ms windows, hop ~10 ms, Hann window"}
+{"scene": "SceneProblem", "element": "problem_statement", "source": "PDF page 1", "value": "Commercial TTS solutions prioritize clarity over prosodic variation"}
+{"scene": "SceneProblem", "element": "challenge", "source": "PDF page 1", "value": "Achieving natural and expressive prosody remains challenging"}
+{"scene": "ScenePipeline", "element": "corpus_hours", "source": "PDF page 3", "value": 14}
+{"scene": "ScenePipeline", "element": "corpus_language", "source": "PDF page 3", "value": "French"}
+{"scene": "ScenePipeline", "element": "speakers", "source": "PDF page 3, Appendix A", "value": 14}
+{"scene": "ScenePipeline", "element": "female_percentage", "source": "PDF page 3", "value": 42}
+{"scene": "ScenePipeline", "element": "pipeline_description", "source": "PPT slide 26", "value": "Human voice → Baseline synthetic → Calculate deltas"}
+{"scene": "SceneStage1", "element": "model", "source": "PDF page 1", "value": "QLoRA-fine-tuned Qwen-2.5-7B"}
+{"scene": "SceneStage1", "element": "break_patterns", "source": "PDF page 4, Appendix A", "value": "250-500 ms median pause, IQR 250-500 ms"}
+{"scene": "SceneStage1", "element": "f1_qwena", "source": "PDF page 7, Table 4", "value": 99.24}
+{"scene": "SceneStage1", "element": "perplexity_qwena", "source": "PDF page 7, Table 4", "value": 1.001}
+{"scene": "SceneStage2", "element": "model", "source": "PDF page 1", "value": "QLoRA-fine-tuned Qwen-2.5-7B"}
+{"scene": "SceneStage2", "element": "prosody_features", "source": "PDF page 4", "value": "pitch, volume, speaking rate, break duration"}
+{"scene": "SceneEvalObj", "element": "f1_qwena", "source": "PDF page 7, Table 4", "value": 99.24}
+{"scene": "SceneEvalObj", "element": "f1_bert", "source": "PDF page 7, Table 4", "value": 92.06}
+{"scene": "SceneEvalObj", "element": "pitch_mae_qwenb", "source": "PDF page 7, Table 5", "value": 0.97}
+{"scene": "SceneEvalObj", "element": "volume_mae_qwenb", "source": "PDF page 7, Table 5", "value": 1.09}
+{"scene": "SceneEvalObj", "element": "rate_mae_qwenb", "source": "PDF page 7, Table 5", "value": 1.10}
+{"scene": "SceneEvalObj", "element": "break_mae_qwenb", "source": "PDF page 7, Table 5", "value": 132.89}
+{"scene": "SceneEvalObj", "element": "pitch_rmse_qwenb", "source": "PDF page 7, Table 5", "value": 1.22}
+{"scene": "SceneEvalObj", "element": "volume_rmse_qwenb", "source": "PDF page 7, Table 5", "value": 1.67}
+{"scene": "SceneEvalObj", "element": "rate_rmse_qwenb", "source": "PDF page 7, Table 5", "value": 1.50}
+{"scene": "SceneEvalObj", "element": "break_rmse_qwenb", "source": "PDF page 7, Table 5", "value": 166.51}
+{"scene": "SceneEvalObj", "element": "pitch_mae_bilstm", "source": "PDF page 7, Table 5", "value": 1.68}
+{"scene": "SceneEvalObj", "element": "volume_mae_bilstm", "source": "PDF page 7, Table 5", "value": 6.04}
+{"scene": "SceneEvalObj", "element": "rate_mae_bilstm", "source": "PDF page 7, Table 5", "value": 0.84}
+{"scene": "SceneEvalSubj", "element": "mos_baseline", "source": "PDF page 1, page 6", "value": 3.20}
+{"scene": "SceneEvalSubj", "element": "mos_enhanced", "source": "PDF page 1, page 6", "value": 3.87}
+{"scene": "SceneEvalSubj", "element": "p_value", "source": "PDF page 1, page 6", "value": "< 0.005"}
+{"scene": "SceneEvalSubj", "element": "participants", "source": "PDF page 6", "value": 18}
+{"scene": "SceneEvalSubj", "element": "preference_count", "source": "PDF page 6", "value": "15 of 18"}
+{"scene": "SceneEvalSubj", "element": "audio_pairs", "source": "PDF page 6", "value": 30}
+{"scene": "SceneOutro", "element": "conclusion", "source": "PDF page 8", "value": "25-40% better MAE reduction, 20% MOS improvement"}

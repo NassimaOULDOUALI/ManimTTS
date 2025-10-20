@@ -1,0 +1,156 @@
+
+{
+  "pdf_data": {
+    "title": "Improving French Synthetic Speech Quality via SSML Prosody Control",
+    "authors": [
+      "Nassima Ould Ouali",
+      "Awais Hussain Sani",
+      "Tim Luka Horstmann",
+      "Ruben Bueno",
+      "Jonah Dauvet",
+      "Eric Moulines"
+    ],
+    "affiliations": [
+      "École Polytechnique, France",
+      "Hi! PARIS Research Center, France",
+      "McGill University, Canada"
+    ],
+    "conference": "ICNLSP 2025",
+    "paper_id": "P25-1088",
+    "corpus": {
+      "language": "French",
+      "duration_hours": 14,
+      "source": "ETX Majelan podcast platform",
+      "speakers": 14,
+      "female_percentage": 42,
+      "source_page": "page 3, Section 3"
+    },
+    "dataset_stats": {
+      "speakers": 14,
+      "total_characters": 711603,
+      "total_words": 122303,
+      "prosody_tags": 17695,
+      "break_tags": 18746,
+      "source_page": "Appendix A, Table 6"
+    },
+    "evaluation_objective": {
+      "qwen_a_break_prediction": {
+        "f1_score": 99.24,
+        "f1_score_percent": 99.2,
+        "perplexity": 1.001,
+        "source_page": "page 7, Table 4"
+      },
+      "bert_baseline": {
+        "f1_score": 92.06,
+        "perplexity": 1.123,
+        "source_page": "page 7, Table 4"
+      },
+      "qwen_b_prosody": {
+        "pitch_mae_percent": 0.97,
+        "pitch_rmse_percent": 1.22,
+        "volume_mae_percent": 1.09,
+        "volume_rmse_percent": 1.67,
+        "rate_mae_percent": 1.10,
+        "rate_rmse_percent": 1.50,
+        "break_time_mae_ms": 132.89,
+        "break_time_rmse_ms": 166.51,
+        "source_page": "page 7, Table 5"
+      },
+      "bilstm_baseline": {
+        "pitch_mae_percent": 1.68,
+        "pitch_rmse_percent": 2.09,
+        "volume_mae_percent": 6.04,
+        "volume_rmse_percent": 7.77,
+        "rate_mae_percent": 0.84,
+        "rate_rmse_percent": 1.26,
+        "source_page": "page 7, Table 5"
+      },
+      "llm_few_shot_best": {
+        "model": "Qwen3 (8B)",
+        "pitch_mae_percent": 1.08,
+        "pitch_rmse_percent": 1.41,
+        "volume_mae_percent": 5.80,
+        "volume_rmse_percent": 7.33,
+        "rate_mae_percent": 0.97,
+        "rate_rmse_percent": 1.31,
+        "break_time_mae_ms": 159.58,
+        "break_time_rmse_ms": 215.50,
+        "source_page": "page 6, Table 3"
+      }
+    },
+    "evaluation_subjective": {
+      "mos_baseline": 3.20,
+      "mos_enhanced": 3.87,
+      "mos_improvement_percent": 20,
+      "p_value": "< 0.005",
+      "participants": 18,
+      "audio_pairs": 30,
+      "preference_count": "15 of 18",
+      "preference_75_percent": 7,
+      "source_page": "page 1 Abstract, page 6 Section 5.1"
+    },
+    "key_contributions": {
+      "stage_1": "Break insertion using #250/#500 patterns",
+      "stage_2": "Prosody values prediction (pitch/rate/volume)",
+      "models_used": "Two QLoRA-fine-tuned Qwen-2.5-7B models",
+      "source_page": "page 1 Abstract"
+    },
+    "prosodic_features": {
+      "pitch_description": "fundamental frequency f0, converted to semitone offset, mapped to percentage",
+      "volume_description": "LUFS (Loudness Units Full Scale), mapped to gain percentage",
+      "rate_description": "words per second, normalized relative to baseline",
+      "break_description": "inter-syntagm silence gaps in milliseconds",
+      "source_page": "page 4, Section 3"
+    },
+    "whisper_alignment": {
+      "model": "Whisper medium",
+      "wer": 5.95,
+      "arr": 96.3,
+      "start_mae_ms": 264,
+      "duration_mae_ms": 91,
+      "source_page": "page 3, Table 1"
+    }
+  },
+  "ppt_data": {
+    "slide_4": {
+      "content": "Text-to-Speech (TTS) is a technology that converts written text into audible speech",
+      "focus_points": ["clear understanding", "human-like expression"]
+    },
+    "slide_9": {
+      "content": "A sound is a mechanical wave that propagates through a medium. Waveform visualization.",
+      "axes": {
+        "horizontal": "Time (s)",
+        "vertical": "Amplitude (normalized)"
+      },
+      "concept": "Loudness: higher RMS amplitude generally corresponds to higher perceived loudness"
+    },
+    "slide_12": {
+      "content": "The spectrogram shows how the energy of the different frequencies in a sound evolves over time",
+      "axes": {
+        "horizontal": "Time",
+        "vertical": "Frequency",
+        "color": "Energy (dB)"
+      }
+    },
+    "slide_13": {
+      "content": "Pitch is strongly related to the fundamental frequency F0 (a physical measure of vocal fold vibration)"
+    },
+    "slide_16": {
+      "content": "In this work: spectrograms with librosa; F0 with pyworld (evaluation) and Praat (sanity checks)"
+    },
+    "slide_22": {
+      "content": "We slice the signal into short, overlapping windows (e.g., 20–30 ms, hop ≈ 10 ms, Hann window). For each window, we apply a Fourier Transform (FFT) to reveal its frequencies.",
+      "technical_details": {
+        "window_size_ms": "20-30",
+        "hop_size_ms": "~10",
+        "window_type": "Hann window"
+      }
+    },
+    "slide_26": {
+      "content": "The pipeline: reference human voice, generate baseline synthetic voice, calculate prosodic deltas (pitch, rate, pauses)"
+    },
+    "slide_27": {
+      "content": "We use Speech Synthesis Markup Language (SSML) to apply these modifications"
+    }
+  }
+}
