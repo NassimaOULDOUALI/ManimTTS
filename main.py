@@ -5,10 +5,11 @@ Manim Community v0.18+ Video Project: TTS & SSML Prosody Control
 
 from manim import *
 import numpy as np
+import os  # AJOUT: import manquant
 
 # --- Durées standardisées (équilibre lisibilité / rythme) ---
 DUR_IN   = 0.95   # apparition titre/éléments principaux
-DUR_ELT  = 0.85   # apparition d’éléments secondaires
+DUR_ELT  = 0.85   # apparition d'éléments secondaires
 DUR_OUT  = 0.63   # disparition (fade-out) compacte
 PAUSE    = 0.38   # petite respiration entre actions
 
@@ -37,8 +38,6 @@ def slide_break(scene: Scene, keep: Mobject | None = None, intertitle: str | Non
 # CONFIGURATION SANS LATEX - Force Pango backend
 config.text_backend = "pango"
 config.disable_latex = True
-config.background_color = BG_COLOR
-np.random.seed(0)
 
 # Theme colors
 BG_COLOR = "#0b0f17"
@@ -66,9 +65,9 @@ class SceneIntro(Scene):
             weight=BOLD
         ).to_edge(UP, buff=0.8)
         
-        # Authors
+        # CORRECTION: Liste d'auteurs corrigée
         authors = Text(
-            "Nassima Ould Ouali, Awais Hussain Sani,Ruben Bueno\n"
+            "Nassima Ould Ouali, Awais Hussain Sani,\n"
             "Ruben Bueno, Jonah Dauvet, Tim Luka Horstmann, Eric Moulines",
             font_size=26,
             color=TEXT_COLOR
@@ -99,6 +98,14 @@ class SceneIntro(Scene):
             Text("✓ 99.2% F1 for break placement", font_size=24, color=TEXT_COLOR)
         ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(conference, DOWN, buff=0.8)
         
+        # CORRECTION: Citation définie et utilisée
+        citation = Text(
+            "Données : ICNLSP 2025, p. 1",
+            font_size=18,
+            color=GRAY,
+            slant=ITALIC
+        ).to_corner(DR)
+        
         # Animations
         self.play(Write(title), run_time=2)
         self.wait(1)
@@ -107,9 +114,8 @@ class SceneIntro(Scene):
         self.play(Write(conference), run_time=1.5)
         self.wait(1)
         self.play(FadeIn(highlights, shift=UP), run_time=3)
-        self.play(FadeIn(citation), run_time=1)
-        self.wait(10) 
-
+        self.play(FadeIn(citation), run_time=1)  # MAINTENANT citation est définie
+        self.wait(10)
 
 # ============================================================================
 # SCENE 1: Audio Basics - Waveform, Spectrogram, Pitch/F0
@@ -259,62 +265,6 @@ class SceneBasics(Scene):
         )
 
 # ============================================================================
-# SCENE 2: TTS Expressivity Problem
-# ============================================================================
-class SceneProblem(Scene):
-    """
-    Scene 2: TTS expressivity problem
-    Sources: PDF page 1, Section 1
-    """
-    def construct(self):
-        # --- Titre persistant ---
-        title = Text("The TTS Expressivity Problem", font_size=48, color=ACCENT_BLUE, weight=BOLD)
-        title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=DUR_IN)
-        self.wait(PAUSE)
-
-        # ===================== Slide 1 — Current State =====================
-        problem_box = VGroup(
-            Text("Current State:", font_size=32, color=ACCENT_YELLOW, weight=BOLD),
-            Text("✗ Commercial TTS prioritizes clarity", font_size=26, color=TEXT_COLOR),
-            Text("✗ Prosodic variation is limited", font_size=26, color=TEXT_COLOR),
-            Text("✗ Results in monotone speech output", font_size=26, color=TEXT_COLOR),
-            Text("✗ Particularly affects French prosody", font_size=26, color=TEXT_COLOR),
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.35).next_to(title, DOWN, buff=0.6)
-
-        self.play(FadeIn(problem_box, shift=UP), run_time=DUR_IN)
-        self.wait(PAUSE + 0.2)
-
-        # Transition propre vers la slide suivante (on garde le titre)
-        slide_break(self, keep=title, intertitle="SSML Challenges")
-
-        # ===================== Slide 2 — SSML Challenges =====================
-        ssml_box = VGroup(
-            Text("SSML Challenges:", font_size=32, color=ACCENT_YELLOW, weight=BOLD),
-            Text("✗ Manual markup doesn't scale", font_size=26, color=TEXT_COLOR),
-            Text("✗ LLMs produce incomplete tags", font_size=26, color=TEXT_COLOR),
-            Text("✗ Invalid syntax generation", font_size=26, color=TEXT_COLOR),
-            Text("✗ Imprecise prosodic control", font_size=26, color=TEXT_COLOR),
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.35).next_to(title, DOWN, buff=0.6)
-
-        self.play(FadeIn(ssml_box, shift=UP), run_time=DUR_IN)
-        self.wait(PAUSE + 0.2)
-
-        # ===================== Référence (slide courte dédiée) =====================
-        slide_break(self, keep=title)  # on efface tout sauf le titre
-        citation = Text(
-            "Données : ICNLSP 2025, p. 1–2",
-            font_size=18, color=TEXT_COLOR, slant=ITALIC
-        ).to_corner(DR)
-
-        self.play(FadeIn(citation), run_time=DUR_ELT)
-        self.wait(PAUSE + 0.2)
-
-        # Nettoyage final (y compris titre et citation) — pas de trainage d’objets
-        self.play(FadeOut(VGroup(title, citation)), run_time=DUR_OUT)
-
-
-# ============================================================================
 # SCENE 3: Pipeline Overview
 # ============================================================================
 class ScenePipeline(Scene):
@@ -403,7 +353,9 @@ class ScenePipeline(Scene):
             "Données : ICNLSP 2025, p. 3 (Section 3) + slide 26",
             font_size=18, color=TEXT_COLOR, slant=ITALIC
         ).to_corner(DR)
-        self.play(FadeIn(citation), run_time=DUR_ELT))
+        
+        # CORRECTION: Parenthèse en trop supprimée
+        self.play(FadeIn(citation), run_time=DUR_ELT)
         self.wait(PAUSE + 0.2)
 
         # Nettoyage final
