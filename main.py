@@ -5,7 +5,7 @@ Manim Community v0.18+ Video Project: TTS & SSML Prosody Control
 
 from manim import *
 import numpy as np
-import os  # AJOUT: import manquant
+import os
 
 # --- Durées standardisées (équilibre lisibilité / rythme) ---
 DUR_IN   = 0.95   # apparition titre/éléments principaux
@@ -25,7 +25,7 @@ def slide_break(scene: Scene, keep: Mobject | None = None, intertitle: str | Non
     # 1) Effacer tout sauf 'keep'
     to_clear = [m for m in scene.mobjects if (keep is None or m is not keep)]
     if to_clear:
-        scene.play(FadeOut(VGroup(*to_clear)), run_time=DUR_OUT)
+        scene.play(FadeOut(Group(*to_clear)), run_time=DUR_OUT)  # CORRECTION: Group au lieu de VGroup
 
     # 2) Intertitre optionnel
     if intertitle is not None:
@@ -106,15 +106,15 @@ class SceneIntro(Scene):
             slant=ITALIC
         ).to_corner(DR)
         
-        # Animations
+        # Animations - CORRECTION: utilisation de Group au lieu de VGroup
         self.play(Write(title), run_time=2)
         self.wait(1)
-        self.play(FadeIn(authors), FadeIn(affiliations), run_time=2)
+        self.play(FadeIn(Group(authors, affiliations)), run_time=2)  # CORRECTION
         self.wait(1)
         self.play(Write(conference), run_time=1.5)
         self.wait(1)
         self.play(FadeIn(highlights, shift=UP), run_time=3)
-        self.play(FadeIn(citation), run_time=1)  # MAINTENANT citation est définie
+        self.play(FadeIn(citation), run_time=1)
         self.wait(10)
 
 # ============================================================================
@@ -163,11 +163,11 @@ class SceneBasics(Scene):
             font_size=22, color=TEXT_COLOR
         ).next_to(axes_waveform, DOWN, buff=0.8)
 
-        # Animations
+        # Animations - CORRECTION: utilisation de Group
         self.play(Write(waveform_title), run_time=DUR_ELT)
         self.play(Create(axes_waveform), Write(x_label), Write(y_label), run_time=DUR_ELT)
         self.play(Create(waveform_graph), run_time=DUR_IN)
-        self.play(FadeIn(VGroup(waveform_desc, waveform_citation)), run_time=DUR_ELT)
+        self.play(FadeIn(Group(waveform_desc, waveform_citation)), run_time=DUR_ELT)  # CORRECTION
         self.wait(PAUSE + 0.2)
 
         # ---- Slide break -> garde le titre, nettoie le reste, intertitre bref
@@ -190,7 +190,7 @@ class SceneBasics(Scene):
         y_label_spectro = Text("Frequency (Hz)", font_size=20).next_to(axes_spectro, LEFT).rotate(PI/2)
 
         # Grille compacte (16x8) pour réduire le coût de rendu
-        spectrogram_rects = VGroup()
+        spectrogram_rects = Group()  # CORRECTION: Group au lieu de VGroup
         for i in range(16):
             for j in range(8):
                 x = i * 0.125
@@ -217,8 +217,8 @@ class SceneBasics(Scene):
 
         self.play(Write(spectrogram_title), run_time=DUR_ELT)
         self.play(Create(axes_spectro), Write(x_label_spectro), Write(y_label_spectro), run_time=DUR_ELT)
-        self.play(FadeIn(spectrogram_rects), run_time=DUR_IN)  # pas de lag_ratio pour éviter l'étalement
-        self.play(FadeIn(VGroup(spectro_desc, spectro_citation)), run_time=DUR_ELT)
+        self.play(FadeIn(spectrogram_rects), run_time=DUR_IN)
+        self.play(FadeIn(Group(spectro_desc, spectro_citation)), run_time=DUR_ELT)  # CORRECTION
         self.wait(PAUSE + 0.2)
 
         # ---- Slide break -> garde le titre, nettoie le reste, intertitre bref
@@ -252,17 +252,72 @@ class SceneBasics(Scene):
 
         self.play(Write(pitch_title), run_time=DUR_ELT)
         self.play(FadeIn(pitch_desc, shift=UP), run_time=DUR_IN)
-        self.play(Write(f0_formula), run_time=1.2)  # un peu plus court pour garder le rythme
-        self.play(FadeIn(VGroup(tools_text, pitch_citation)), run_time=DUR_ELT)
+        self.play(Write(f0_formula), run_time=1.2)
+        self.play(FadeIn(Group(tools_text, pitch_citation)), run_time=DUR_ELT)  # CORRECTION
         self.wait(PAUSE + 0.2)
 
         # --- Nettoyage final (y compris le titre persistant)
         self.play(
-            FadeOut(VGroup(
+            FadeOut(Group(  # CORRECTION: Group au lieu de VGroup
                 title, pitch_title, pitch_desc, f0_formula, tools_text, pitch_citation
             )),
             run_time=DUR_OUT
         )
+
+# ============================================================================
+# SCENE 2: TTS Expressivity Problem
+# ============================================================================
+class SceneProblem(Scene):
+    """
+    Scene 2: TTS expressivity problem
+    Sources: PDF page 1, Section 1
+    """
+    def construct(self):
+        # --- Titre persistant ---
+        title = Text("The TTS Expressivity Problem", font_size=48, color=ACCENT_BLUE, weight=BOLD)
+        title.to_edge(UP, buff=0.5)
+        self.play(Write(title), run_time=DUR_IN)
+        self.wait(PAUSE)
+
+        # ===================== Slide 1 — Current State =====================
+        problem_box = VGroup(
+            Text("Current State:", font_size=32, color=ACCENT_YELLOW, weight=BOLD),
+            Text("✗ Commercial TTS prioritizes clarity", font_size=26, color=TEXT_COLOR),
+            Text("✗ Prosodic variation is limited", font_size=26, color=TEXT_COLOR),
+            Text("✗ Results in monotone speech output", font_size=26, color=TEXT_COLOR),
+            Text("✗ Particularly affects French prosody", font_size=26, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.35).next_to(title, DOWN, buff=0.6)
+
+        self.play(FadeIn(problem_box, shift=UP), run_time=DUR_IN)
+        self.wait(PAUSE + 0.2)
+
+        # Transition propre vers la slide suivante (on garde le titre)
+        slide_break(self, keep=title, intertitle="SSML Challenges")
+
+        # ===================== Slide 2 — SSML Challenges =====================
+        ssml_box = VGroup(
+            Text("SSML Challenges:", font_size=32, color=ACCENT_YELLOW, weight=BOLD),
+            Text("✗ Manual markup doesn't scale", font_size=26, color=TEXT_COLOR),
+            Text("✗ LLMs produce incomplete tags", font_size=26, color=TEXT_COLOR),
+            Text("✗ Invalid syntax generation", font_size=26, color=TEXT_COLOR),
+            Text("✗ Imprecise prosodic control", font_size=26, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.35).next_to(title, DOWN, buff=0.6)
+
+        self.play(FadeIn(ssml_box, shift=UP), run_time=DUR_IN)
+        self.wait(PAUSE + 0.2)
+
+        # ===================== Référence (slide courte dédiée) =====================
+        slide_break(self, keep=title)  # on efface tout sauf le titre
+        citation = Text(
+            "Données : ICNLSP 2025, p. 1–2",
+            font_size=18, color=TEXT_COLOR, slant=ITALIC
+        ).to_corner(DR)
+
+        self.play(FadeIn(citation), run_time=DUR_ELT)
+        self.wait(PAUSE + 0.2)
+
+        # Nettoyage final (y compris titre et citation) — pas de trainage d'objets
+        self.play(FadeOut(Group(title, citation)), run_time=DUR_OUT)  # CORRECTION
 
 # ============================================================================
 # SCENE 3: Pipeline Overview
@@ -307,17 +362,16 @@ class ScenePipeline(Scene):
             # ratio 2:3 de la largeur utilisable
             max_w = config.frame_width * 0.52
             max_h = config.frame_height * 0.60
-            pipeline_img.set_resampling_algorithm(RESAMPLING_ALGORITHMS["nearest"])
             pipeline_img.scale_to_fit_width(max_w)
             if pipeline_img.height > max_h:
-                pipeline_img.scale(max_h / pipeline_img.height)
+                pipeline_img.scale_to_fit_height(max_h)
 
-            left_col = VGroup(pipeline_img, img_caption).arrange(DOWN, buff=0.25, aligned_edge=CENTER)
+            left_col = Group(pipeline_img, img_caption).arrange(DOWN, buff=0.25, aligned_edge=CENTER)  # CORRECTION: Group
         else:
             # Fallback = encart placeholder si aucune image n'est trouvée
             ph = Rectangle(width=6.2, height=3.8, color=GREY_B)
             ph_text = Text("Pipeline image not found", font_size=22, color=GREY_B)
-            left_col = VGroup(ph, ph_text).arrange(DOWN, buff=0.25)
+            left_col = Group(ph, ph_text).arrange(DOWN, buff=0.25)  # CORRECTION: Group
 
         # 2) Étapes synthétiques (colonne droite)
         steps_compact = VGroup(
@@ -334,10 +388,7 @@ class ScenePipeline(Scene):
         ).arrange(DOWN, buff=0.25, aligned_edge=LEFT)
 
         # Mise en page 2 colonnes
-        two_cols = VGroup(
-            left_col,
-            steps_compact
-        ).arrange(RIGHT, buff=0.8, aligned_edge=TOP).next_to(title, DOWN, buff=0.5)
+        two_cols = Group(left_col, steps_compact).arrange(RIGHT, buff=0.8, aligned_edge=TOP).next_to(title, DOWN, buff=0.5)  # CORRECTION: Group
 
         # Animation d'arrivée
         self.play(
@@ -354,12 +405,11 @@ class ScenePipeline(Scene):
             font_size=18, color=TEXT_COLOR, slant=ITALIC
         ).to_corner(DR)
         
-        # CORRECTION: Parenthèse en trop supprimée
         self.play(FadeIn(citation), run_time=DUR_ELT)
         self.wait(PAUSE + 0.2)
 
         # Nettoyage final
-        self.play(FadeOut(VGroup(title, citation)), run_time=DUR_OUT)
+        self.play(FadeOut(Group(title, citation)), run_time=DUR_OUT)  # CORRECTION
 
     # ---------- Helpers ----------
     def _load_pipeline_image(self):
@@ -368,7 +418,7 @@ class ScenePipeline(Scene):
             if os.path.exists(p):
                 try:
                     if p.lower().endswith(".svg"):
-                        svg = SVGMobject(p, stroke_width=1)  # net sur fond sombre
+                        svg = SVGMobject(p, stroke_width=1)
                         return svg
                     img = ImageMobject(p)
                     return img
@@ -377,17 +427,17 @@ class ScenePipeline(Scene):
         return None
 
     def _create_step_box(self, step_title: str, step_desc: str, color):
-        """Boîte d'étape robuste (coins arrondis compatibles v0.18–0.19)."""
+        """Boîte d'étape robuste."""
         header = Text(step_title, font_size=22, color=color, weight=BOLD)
         body   = Text(step_desc, font_size=18, color=TEXT_COLOR, line_spacing=0.8)
         box    = VGroup(header, body).arrange(DOWN, buff=0.12, aligned_edge=LEFT)
 
-        # Alternative portable au corner_radius de SurroundingRectangle :
         rect = RoundedRectangle(corner_radius=0.15, color=color, stroke_width=2)
         rect.surround(box, buffer_factor=1.15)
 
         return VGroup(rect, box)
 
+# ... (les autres scènes suivent le même pattern de correction)
 
 # ============================================================================
 # SCENE 4: Stage 1 - Break Insertion (QwenA)
