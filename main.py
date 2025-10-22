@@ -1,93 +1,65 @@
 from manim import *
 import numpy as np
+from pathlib import Path
 
-# CONFIGURATION SANS LATEX - Force Pango backend
+ASSETS_DIR = Path(__file__).parent / "assets"
+
+def load_img(stem: str, exts=(".png", ".jpg", ".jpeg", ".gif", ".ico")) -> ImageMobject:
+    for ext in exts:
+        p = ASSETS_DIR / f"{stem}{ext}"
+        if p.exists():
+            return ImageMobject(str(p))
+    raise FileNotFoundError(f"Image introuvable pour '{stem}' dans assets/ ({exts})")
+
 config.text_backend = "pango"
 
-# Theme colors
-BG_COLOR = "#0b0f17"
-ACCENT_BLUE = "#7cc5ff"
-ACCENT_YELLOW = "#ffd166"
-TEXT_COLOR = WHITE
+BG_COLOR      = "#0B1026"  
+ACCENT_BLUE   = "#1363DF"  
+ACCENT_YELLOW = "#E5007D" 
+TEXT_COLOR    = "#F4F6FA"  
+
+ACCENT_PURPLE = "#5A1E86"
+ACCENT_CYAN   = "#14B8FF"
+HI_GREY       = "#9AA3B2"  
 
 config.background_color = BG_COLOR
 
-# Image URLs from searches
-WAVEFORM_IMAGE_URL = "https://dimg.wavevisual.com/v3/von-sample-2.png?width=3840"
-SPECTROGRAM_IMAGE_URL = "https://upload.wikimedia.org/wikipedia/commons/c/c5/Spectrogram-19thC.png"
-PIPELINE_IMAGE_URL = "https://docs.nvidia.com/deeplearning/riva/user-guide/docs/_images/riva-tts-pipeline.png"
+
 
 # ============================================================================
 # SCENE 0: Introduction (30s)
 # ============================================================================
 class SceneIntro(Scene):
-    """
-    Scene 0: Title, authors, paper reference
-    Duration: 30 seconds
-    Sources: PDF page 1
-    """
     def construct(self):
-        # Title
         title = Text(
             "Improving French Synthetic Speech Quality\nvia SSML Prosody Control",
-            font_size=42,
-            color=ACCENT_BLUE,
-            weight=BOLD
-        ).to_edge(UP, buff=0.8)
-        
-        # Authors
+            font_size=44, color=ACCENT_BLUE, weight=BOLD
+        ).to_edge(UP, buff=1.1)
+
         authors = Text(
-            "Nassima Ould Ouali, Awais Hussain Sani, Tim Luka Horstmann,\n"
-            "Ruben Bueno, Jonah Dauvet, Eric Moulines",
-            font_size=26,
-            color=TEXT_COLOR
-        ).next_to(title, DOWN, buff=0.5)
-        
-        # Affiliations
+            "Nassima Ould Ouali, Awais Hussain Sani, Ruben Bueno,\n"
+            "Jonah Dauvet, Tim Luka Horstmann, Eric Moulines",
+            font_size=26, color=TEXT_COLOR
+        ).next_to(title, DOWN, buff=0.7)
+
         affiliations = Text(
             "École Polytechnique, Hi! PARIS Research Center, McGill University",
-            font_size=22,
-            color=ACCENT_YELLOW,
-            slant=ITALIC
-        ).next_to(authors, DOWN, buff=0.3)
-        
-        # Conference
-        conference = Text(
-            "ICNLSP 2025 | Paper P25-1088",
-            font_size=28,
-            color=ACCENT_BLUE,
-            weight=BOLD
-        ).next_to(affiliations, DOWN, buff=0.8)
-        
-        # Citation
-        citation = Text(
-            "Données : ICNLSP 2025, p. 1",
-            font_size=18,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        
-        # Key highlights
-        highlights = VGroup(
-            Text("✓ 14h French podcast corpus", font_size=24, color=TEXT_COLOR),
-            Text("✓ QLoRA-tuned Qwen-2.5-7B models", font_size=24, color=TEXT_COLOR),
-            Text("✓ MOS 3.20 → 3.87 (p < 0.005)", font_size=24, color=ACCENT_YELLOW),
-            Text("✓ 99.2% F1 for break placement", font_size=24, color=TEXT_COLOR)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(conference, DOWN, buff=0.8)
-        
-        # Animations with pauses for pedagogy
-        self.play(Write(title), run_time=2)
-        self.wait(2)  # Pause to read title
-        self.play(FadeIn(authors), run_time=1)
-        self.wait(1)
-        self.play(FadeIn(affiliations), run_time=1)
-        self.wait(1)
-        self.play(Write(conference), run_time=1.5)
-        self.wait(2)
-        self.play(LaggedStart(*[FadeIn(h, shift=UP) for h in highlights], lag_ratio=0.5), run_time=4)
-        self.wait(2)
-        self.play(FadeIn(citation), run_time=1)
-        self.wait(12)  # Adjusted wait to fit 30s total
+            font_size=22, color=HI_GREY, slant=ITALIC
+        ).next_to(authors, DOWN, buff=0.5)
+
+        conference = Text("ICNLSP 2025", font_size=28, color=ACCENT_BLUE, weight=BOLD)\
+            .next_to(affiliations, DOWN, buff=0.8)
+
+        self.play(Write(title), run_time=1.4); self.wait(0.5)
+        self.play(FadeIn(authors, shift=UP), run_time=0.8)
+        self.play(FadeIn(affiliations, shift=UP), run_time=0.7)
+        self.play(Write(conference), run_time=0.8)
+        self.wait(2.0)
+        # petite respiration + sortie douce
+        self.play(Flash(title, flash_radius=0.28), run_time=0.7); self.wait(0.5)
+        self.play(*map(FadeOut, [conference, affiliations, authors]), run_time=1.0)
+        self.wait(0.4)
+
 
 
 # ============================================================================
@@ -95,307 +67,271 @@ class SceneIntro(Scene):
 # ============================================================================
 class SceneBasics(Scene):
     """
-    Scene 1: Waveform, spectrogram, pitch/F0 animations with images
-    Duration: 90 seconds
-    Sources: PPT slides 9, 12, 13, 16, 22
+    Scene 1: Waveform, spectrogram, pitch/F0 avec VRAIES images (assets/)
+    Duration: ~90s
     """
     def construct(self):
-        # Title
-        title = Text("Audio Signal Basics", font_size=48, color=ACCENT_BLUE, weight=BOLD)
-        title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=2)
-        self.wait(2)  # Pause for introduction
-        
-        # Pedagogical intro text
-        intro_text = Text("Let's explore the fundamentals step by step", font_size=28, color=ACCENT_YELLOW)
-        intro_text.next_to(title, DOWN, buff=0.5)
-        self.play(FadeIn(intro_text), run_time=1.5)
-        self.wait(2)
-        self.play(FadeOut(intro_text), run_time=1)
-        
-        # ===== WAVEFORM SECTION (30s) =====
-        waveform_title = Text("Waveform: Amplitude vs. Time", font_size=32, color=ACCENT_YELLOW)
-        waveform_title.next_to(title, DOWN, buff=0.5)
-        
-        self.play(Write(waveform_title), run_time=1.5)
-        self.wait(1)
-        
-        # Use real image instead of plot
-        waveform_image = ImageMobject(WAVEFORM_IMAGE_URL).scale(0.6).shift(DOWN * 0.5)
-        
-        waveform_desc = Text(
-            "Loudness: higher RMS amplitude → higher perceived loudness\n"
-            "This visual represents how sound pressure changes over time.",
-            font_size=22,
-            color=TEXT_COLOR,
-            line_spacing=1
-        ).next_to(waveform_image, DOWN, buff=0.5)
-        
-        waveform_citation = Text(
-            "D'après le cours (slide 9) et exemple d'onde sonore",
-            font_size=16,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        
-        self.play(FadeIn(waveform_image), run_time=3)
-        self.wait(2)
-        self.play(FadeIn(waveform_desc), run_time=2)
-        self.wait(2)
-        self.play(FadeIn(waveform_citation), run_time=1)
-        self.wait(14)  # Adjusted for 30s section
-        
-        # Fade out waveform elements
-        self.play(
-            FadeOut(waveform_title),
-            FadeOut(waveform_image),
-            FadeOut(waveform_desc),
-            FadeOut(waveform_citation),
-            run_time=2
-        )
-        self.wait(1)
-        
-        # ===== SPECTROGRAM SECTION (30s) =====
-        spectrogram_title = Text("Spectrogram: Frequency Energy over Time", font_size=32, color=ACCENT_YELLOW)
-        spectrogram_title.next_to(title, DOWN, buff=0.5)
-        
-        self.play(Write(spectrogram_title), run_time=1.5)
-        self.wait(1)
-        
-        # Use real image
-        spectro_image = ImageMobject(SPECTROGRAM_IMAGE_URL).scale(0.8).shift(DOWN * 0.5)
-        
-        spectro_desc = Text(
-            "Window: 20-30 ms | Hop: ~10 ms | Hann window + FFT\n"
-            "Colors indicate energy intensity at different frequencies.",
-            font_size=22,
-            color=TEXT_COLOR,
-            line_spacing=1
-        ).next_to(spectro_image, DOWN, buff=0.5)
-        
-        spectro_citation = Text(
-            "D'après le cours (slide 12) et exemple de spectrogramme",
-            font_size=16,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        
-        self.play(FadeIn(spectro_image), run_time=3)
-        self.wait(2)
-        self.play(FadeIn(spectro_desc), run_time=2)
-        self.wait(2)
-        self.play(FadeIn(spectro_citation), run_time=1)
-        self.wait(14)  # Adjusted for 30s
-        
-        # Fade out
-        self.play(
-            FadeOut(spectrogram_title),
-            FadeOut(spectro_image),
-            FadeOut(spectro_desc),
-            FadeOut(spectro_citation),
-            run_time=2
-        )
-        self.wait(1)
-        
-        # ===== PITCH/F0 SECTION (29s) =====
-        pitch_title = Text("Pitch & Fundamental Frequency (F0)", font_size=32, color=ACCENT_YELLOW)
-        pitch_title.next_to(title, DOWN, buff=0.5)
-        
-        self.play(Write(pitch_title), run_time=1.5)
-        self.wait(1)
-        
+        title = Text("Audio Signal Basics", font_size=48, color=ACCENT_BLUE, weight=BOLD).to_edge(UP, buff=0.5)
+        self.play(Write(title), run_time=1.6)
+        self.wait(0.75)
+
+        # ===== WAVEFORM (≈30s) =====
+        waveform_title = Text("Waveform: Amplitude vs. Time", font_size=32, color=ACCENT_YELLOW).next_to(title, DOWN, buff=0.65)
+        self.play(Write(waveform_title), run_time=1.0)
+
+        wf = load_img("waveform").scale(1.0)
+        if wf.width > config.frame_width * 1.05:
+            wf.width = config.frame_width * 1.05
+        wf.shift(DOWN * 0.3)
+
+        wf_desc = Text(
+            "Loudness ~ RMS amplitude (Average Energy)\nTemporal variation of the audio signal.",
+            font_size=22, color=TEXT_COLOR, line_spacing=1
+        ).next_to(wf, DOWN, buff=0.4)
+
+        wf_cite = Text("Databootcamp (slide 9)", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
+
+        self.play(FadeIn(wf, shift=UP), run_time=1)
+        self.play(FadeIn(wf_desc), FadeIn(wf_cite), run_time=0.7)
+        self.wait(10)
+
+        self.play(FadeOut(waveform_title), FadeOut(wf), FadeOut(wf_desc), FadeOut(wf_cite), run_time=0.8)
+        self.wait(0.35)
+
+        # ===== SPECTROGRAM (≈30s) =====
+        spect_title = Text("Spectrogram: Frequency Energy over Time", font_size=32, color=ACCENT_YELLOW).next_to(title, DOWN, buff=0.5)
+        self.play(Write(spect_title), run_time=1.0)
+
+        sp = load_img("spectrogramme").scale(1.0)
+        if sp.width > config.frame_width * 1.05:
+            sp.width = config.frame_width * 1.05
+        sp.shift(DOWN * 0.2)
+
+        sp_desc = Text("Window 20–30 ms • Hop ≈10 ms • Hann + FFT", font_size=22, color=TEXT_COLOR).next_to(sp, DOWN, buff=0.35)
+        sp_cite = Text("Databootcamp", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
+
+        self.play(FadeIn(sp, shift=UP), run_time=1.0)
+        self.play(FadeIn(sp_desc), FadeIn(sp_cite), run_time=0.6)
+        self.wait(12)
+
+        self.play(FadeOut(spect_title), FadeOut(sp), FadeOut(sp_desc), FadeOut(sp_cite), run_time=0.8)
+        self.wait(0.2)
+
+        # ===== PITCH/F0 (≈29s) =====
+        pitch_title = Text("Pitch & Fundamental Frequency (F0)", font_size=32, color=ACCENT_YELLOW).next_to(title, DOWN, buff=0.5)
+        self.play(Write(pitch_title), run_time=1.0)
+
+        # ⚠️ Linux est sensible à la casse : fichier 'F0.png'
+        f0img = load_img("f0").scale(1.0)
+        if f0img.width > config.frame_width * 1.05:
+            f0img.width = config.frame_width * 1.05
+        f0img.shift(DOWN * 0.2)
+
         pitch_desc = VGroup(
-            Text("Pitch is strongly related to F0", font_size=26, color=TEXT_COLOR),
-            Text("(physical measure of vocal fold vibration)", font_size=22, color=GRAY, slant=ITALIC)
-        ).arrange(DOWN, buff=0.2).shift(UP * 0.5)
-        
-        # F0 formula display - TEXT ONLY
-        f0_formula = VGroup(
-            Text("s_i = 12 × log2(f0(i) / f0_ref)", font_size=32, color=ACCENT_BLUE),
-            Text("(semitone offset)", font_size=20, color=GRAY, slant=ITALIC),
-            Text("p_i = (2^(s_i/12) - 1) × 100", font_size=32, color=ACCENT_BLUE),
-            Text("(percentage pitch change)", font_size=20, color=GRAY, slant=ITALIC)
-        ).arrange(DOWN, buff=0.3).shift(DOWN * 0.5)
-        
-        tools_text = Text(
-            "Tools: librosa (spectrogram), pyworld (F0), Praat (verification)",
-            font_size=22,
-            color=ACCENT_YELLOW
-        ).to_edge(DOWN, buff=1)
-        
-        pitch_citation = Text(
-            "D'après le cours (slides 13, 16) + ICNLSP 2025, p. 4",
-            font_size=16,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        
-        self.play(FadeIn(pitch_desc, shift=UP), run_time=2)
-        self.wait(1)
-        self.play(LaggedStart(*[Write(f) for f in f0_formula], lag_ratio=0.5), run_time=4)
-        self.wait(2)
-        self.play(FadeIn(tools_text), run_time=1)
-        self.wait(1)
-        self.play(FadeIn(pitch_citation), run_time=1)
-        self.wait(13)  # Adjusted for 29s
-        
-        # Clear all
-        self.play(
-            FadeOut(title),
-            FadeOut(pitch_title),
-            FadeOut(pitch_desc),
-            FadeOut(f0_formula),
-            FadeOut(tools_text),
-            FadeOut(pitch_citation),
-            run_time=2
-        )
-        self.wait(1)
-        # Total: 90s
+            Text("Perceived pitch ↔ F0 (fundamental frequency)", font_size=26, color=TEXT_COLOR),
+            Text("Typical extraction: pyworld, Praat, post-processing outliers", font_size=22, color=GRAY, slant=ITALIC)
+        ).arrange(DOWN, buff=0.2).next_to(f0img, DOWN, buff=0.45)
+
+        pitch_cite = Text("Databootcamp", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
+
+        self.play(FadeIn(f0img, shift=UP), run_time=1.0)
+        self.play(FadeIn(pitch_desc), FadeIn(pitch_cite), run_time=0.6)
+        self.wait(12)
+
+        self.play(FadeOut(title), FadeOut(pitch_title), FadeOut(f0img), FadeOut(pitch_desc), FadeOut(pitch_cite), run_time=0.9)
+        self.wait(0.1)
 
 
 # ============================================================================
-# SCENE 2: TTS Expressivity Problem (75s)
+# SCENE 2A: TTS Expressivity Problem (~35s)
 # ============================================================================
-class SceneProblem(Scene):
-    """
-    Scene 2: TTS expressivity problem
-    Duration: 75 seconds
-    Sources: PDF page 1, Section 1
-    """
+class SceneProblemTTS(Scene):
     def construct(self):
-        # Title
         title = Text("The TTS Expressivity Problem", font_size=48, color=ACCENT_BLUE, weight=BOLD)
         title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=2)
-        self.wait(2)
-        
-        # Problem statement with lagged animation
-        problem_box = VGroup(
-            Text("Current State:", font_size=32, color=ACCENT_YELLOW, weight=BOLD),
+        self.play(Write(title), run_time=1.4); self.wait(0.4)
+
+        # Bloc central avec fond pour éviter l'effet d'écrasement
+        heading = Text("Current State", font_size=34, color=ACCENT_YELLOW, weight=BOLD)
+
+        bullets = VGroup(
             Text("✗ Commercial TTS prioritizes clarity", font_size=26, color=TEXT_COLOR),
-            Text("✗ Prosodic variation is limited", font_size=26, color=TEXT_COLOR),
-            Text("✗ Results in monotone speech output", font_size=26, color=TEXT_COLOR),
-            Text("✗ Particularly affects French prosody", font_size=26, color=TEXT_COLOR)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.4).shift(UP * 0.5)
-        
-        self.play(LaggedStart(*[FadeIn(p, shift=UP) for p in problem_box], lag_ratio=0.3), run_time=5)
-        self.wait(4)
-        
-        # SSML limitations
-        ssml_box = VGroup(
-            Text("SSML Challenges:", font_size=32, color=ACCENT_YELLOW, weight=BOLD),
-            Text("✗ Manual markup doesn't scale", font_size=26, color=TEXT_COLOR),
-            Text("✗ LLMs produce incomplete tags", font_size=26, color=TEXT_COLOR),
-            Text("✗ Invalid syntax generation", font_size=26, color=TEXT_COLOR),
-            Text("✗ Imprecise prosodic control", font_size=26, color=TEXT_COLOR)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.4).shift(DOWN * 1)
-        
-        self.play(LaggedStart(*[FadeIn(s, shift=UP) for s in ssml_box], lag_ratio=0.3), run_time=5)
-        self.wait(4)
-        
-        # Citation
-        citation = Text(
-            "Données : ICNLSP 2025, p. 1-2",
-            font_size=18,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        self.play(FadeIn(citation), run_time=1)
-        self.wait(2)
-        
-        # Clear with fade out
-        self.play(
-            FadeOut(title),
-            FadeOut(problem_box),
-            FadeOut(ssml_box),
-            FadeOut(citation),
-            run_time=2
-        )
-        self.wait(48)
+            Text("✗ Prosodic variation is limited",      font_size=26, color=TEXT_COLOR),
+            Text("✗ Results in monotone speech output",  font_size=26, color=TEXT_COLOR),
+            Text("✗ Particularly affects French prosody",font_size=26, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.28)
 
+        content = VGroup(heading, bullets).arrange(DOWN, aligned_edge=LEFT, buff=0.45)
+
+        panel = RoundedRectangle(corner_radius=0.25, width=10.8, height=4.6, stroke_width=2, stroke_color=ACCENT_BLUE)
+        panel.set_fill(BG_COLOR, opacity=0.0)
+        # on met un léger padding visuel en centrant le groupe dans le panel
+        content.move_to(panel.get_center())
+
+        card = Group(panel, content).next_to(title, DOWN, buff=0.6)
+
+        # Animations
+        self.play(Create(panel), run_time=0.8)
+        self.play(FadeIn(heading, shift=UP), run_time=0.6)
+        self.play(LaggedStart(*[FadeIn(b, shift=UP) for b in bullets], lag_ratio=0.22), run_time=2.4)
+        self.wait(2.0)
+
+        # petit focus sur deux points clés (remplit le temps sans “blanc”)
+        self.play(Indicate(bullets[1], scale_factor=1.05), run_time=0.7); self.wait(0.3)
+        self.play(Indicate(bullets[2], scale_factor=1.05), run_time=0.7); self.wait(0.6)
+
+        citation = Text("Données : ICNLSP 2025, p. 1–2", font_size=18, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=0.5); self.wait(1.0)
+
+        # sortie propre
+        self.play(FadeOut(citation, run_time=0.4))
+        self.play(FadeOut(card, shift=DOWN, run_time=0.8), FadeOut(title, run_time=0.8))
+        self.wait(0.6)
 
 # ============================================================================
-# SCENE 3: Pipeline Overview (90s)
+# SCENE 2B: SSML Challenges (~40s)
 # ============================================================================
-class ScenePipeline(Scene):
-    """
-    Scene 3: Text → pauses → SSML → TTS pipeline with image
-    Duration: 90 seconds
-    Sources: PDF page 3, PPT slide 26
-    """
+class SceneProblemSSML(Scene):
     def construct(self):
-        # Title
-        title = Text("The Proposed Pipeline", font_size=48, color=ACCENT_BLUE, weight=BOLD)
+        title = Text("SSML Challenges", font_size=48, color=ACCENT_BLUE, weight=BOLD)
         title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=2)
-        self.wait(2)
-        
-        # Corpus info with lagged
-        corpus_info = VGroup(
-            Text("Corpus: 14h French Podcast Audio", font_size=28, color=ACCENT_YELLOW, weight=BOLD),
-            Text("Source: ETX Majelan", font_size=24, color=TEXT_COLOR),
-            Text("14 speakers (42% female) | 122,303 words", font_size=24, color=TEXT_COLOR)
-        ).arrange(DOWN, buff=0.3).next_to(title, DOWN, buff=0.5)
-        
-        self.play(LaggedStart(*[FadeIn(c, shift=DOWN) for c in corpus_info], lag_ratio=0.3), run_time=3)
-        self.wait(3)
-        
-        # Use pipeline image
-        pipeline_image = ImageMobject(PIPELINE_IMAGE_URL).scale(0.5).shift(DOWN * 0.5)
-        
-        self.play(FadeIn(pipeline_image), run_time=3)
-        self.wait(2)
-        
-        # Pipeline steps as overlays or separate
-        step1 = self._create_step_box("1. Audio Preprocessing", "Demucs source separation\nWhisperTS alignment (WER 5.95%)", ACCENT_BLUE).scale(0.6).to_edge(LEFT)
-        step2 = self._create_step_box("2. Baseline Generation", "MS Azure TTS (Henri voice)\nReference for delta calculation", ACCENT_YELLOW).scale(0.6).next_to(step1, RIGHT, buff=0.2)
-        # Simplify steps for pedagogy, show one by one
-        self.play(LaggedStart(FadeIn(step1), FadeIn(step2), lag_ratio=1), run_time=3)
-        self.wait(2)
-        
-        step3 = self._create_step_box("3. Syntagm Segmentation", "Prosodic units\nPause detection", ACCENT_BLUE).scale(0.6).next_to(step2, RIGHT, buff=0.2)
-        step4 = self._create_step_box("4. Feature Extraction", "Pitch, Volume, Rate, Breaks\nNormalized deltas", ACCENT_YELLOW).scale(0.6).next_to(step3, RIGHT, buff=0.2)
-        self.play(LaggedStart(FadeIn(step3), FadeIn(step4), lag_ratio=1), run_time=3)
-        self.wait(2)
-        
-        step5 = self._create_step_box("5. SSML Generation", "QwenA: Break insertion\nQwenB: Prosody values", ACCENT_BLUE).scale(0.6).next_to(step4, RIGHT, buff=0.2)
-        self.play(FadeIn(step5), run_time=2)
-        self.wait(2)
-        
-        # Citation
-        citation = Text(
-            "Données : ICNLSP 2025, p. 3 (Section 3) + slide 26 + diagramme exemple",
-            font_size=18,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        self.play(FadeIn(citation), run_time=1)
-        self.wait(2)
-        
-        # Clear
-        self.play(
-            FadeOut(title),
-            FadeOut(corpus_info),
-            FadeOut(pipeline_image),
-            FadeOut(step1),
-            FadeOut(step2),
-            FadeOut(step3),
-            FadeOut(step4),
-            FadeOut(step5),
-            FadeOut(citation),
-            run_time=2
-        )
-        self.wait(54)  # Adjusted to fit 90s
-    
+        self.play(Write(title), run_time=1.2); self.wait(0.4)
+
+        heading = Text("Why SSML is hard in practice", font_size=34, color=ACCENT_YELLOW, weight=BOLD)
+
+        bullets = VGroup(
+            Text("✗ Manual markup doesn't scale",    font_size=26, color=TEXT_COLOR),
+            Text("✗ LLMs produce incomplete tags",  font_size=26, color=TEXT_COLOR),
+            Text("✗ Invalid syntax generation",     font_size=26, color=TEXT_COLOR),
+            Text("✗ Imprecise prosodic control",    font_size=26, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.28)
+
+        content = VGroup(heading, bullets).arrange(DOWN, aligned_edge=LEFT, buff=0.45)
+
+        panel = RoundedRectangle(corner_radius=0.25, width=10.8, height=4.6, stroke_width=2, stroke_color=ACCENT_BLUE)
+        panel.set_fill(BG_COLOR, opacity=0.0)
+        content.move_to(panel.get_center())
+
+        card = Group(panel, content).next_to(title, DOWN, buff=0.6)
+
+        self.play(Create(panel), run_time=0.8)
+        self.play(FadeIn(heading, shift=UP), run_time=0.6)
+        self.play(LaggedStart(*[FadeIn(b, shift=UP) for b in bullets], lag_ratio=0.22), run_time=2.6)
+        self.wait(1.2)
+
+        # mini “callout” pédagogique sur deux points
+        self.play(Indicate(bullets[0], scale_factor=1.06), run_time=0.7); self.wait(0.3)
+        self.play(Indicate(bullets[3], scale_factor=1.06), run_time=0.7); self.wait(0.6)
+
+        citation = Text("Données : ICNLSP 2025, p. 1–2", font_size=18, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=0.5); self.wait(0.8)
+
+        self.play(FadeOut(citation, run_time=0.4))
+        self.play(FadeOut(card, shift=DOWN, run_time=0.8), FadeOut(title, run_time=0.8))
+        self.wait(0.5)
+
+# ============================================================================
+# SCENE 3A: Proposed Pipeline — Interactive Overview (~45s)
+# ============================================================================
+class ScenePipelineInteractive(Scene):
     def _create_step_box(self, step_title, step_desc, color):
-        """Helper to create a pipeline step box"""
         box = VGroup(
-            Text(step_title, font_size=22, color=color, weight=BOLD),
-            Text(step_desc, font_size=18, color=TEXT_COLOR, line_spacing=0.8)
-        ).arrange(DOWN, buff=0.15, aligned_edge=LEFT)
-        
-        rect = SurroundingRectangle(box, color=color, buff=0.2, corner_radius=0.1)
+            Text(step_title, font_size=30, color=color, weight=BOLD),
+            Text(step_desc, font_size=22, color=TEXT_COLOR, line_spacing=0.9),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.22)
+        rect = RoundedRectangle(corner_radius=0.18, stroke_color=color, stroke_width=3)
+        rect.surround(box, buff=0.28)
         return VGroup(rect, box)
+
+    def construct(self):
+        title = Text("The Proposed Pipeline — Interactive Overview",
+                     font_size=46, color=ACCENT_BLUE, weight=BOLD).to_edge(UP, buff=0.45)
+        self.play(Write(title), run_time=1.2); self.wait(0.4)
+
+        # 5 gros “cubes”
+        step1 = self._create_step_box("1. Audio Preprocessing",
+                "Demucs source separation\nWhisperTS alignment (WER 5.95%)", ACCENT_BLUE)
+        step2 = self._create_step_box("2. Baseline Generation",
+                "MS Azure TTS (Henri voice)\nReference for delta calculation", ACCENT_YELLOW)
+        step3 = self._create_step_box("3. Syntagm Segmentation",
+                "Prosodic units\nPause detection", ACCENT_BLUE)
+        step4 = self._create_step_box("4. Feature Extraction",
+                "Pitch, Volume, Rate, Breaks\nNormalized deltas", ACCENT_YELLOW)
+        step5 = self._create_step_box("5. SSML Generation",
+                "QwenA: Break insertion\nQwenB: Prosody values", ACCENT_BLUE)
+
+        # Disposition: colonne centrée, grands blocs
+        steps = VGroup(step1, step2, step3, step4, step5)\
+                .arrange(DOWN, buff=0.35, aligned_edge=LEFT)\
+                .scale(0.9)\
+                .next_to(title, DOWN, buff=0.5)
+
+        self.play(LaggedStart(*[FadeIn(s, shift=UP) for s in steps], lag_ratio=0.18), run_time=2.2)
+        self.wait(0.4)
+
+        # Flèches entre blocs (courtes pour lisibilité)
+        arrows = VGroup()
+        for i in range(4):
+            a = Arrow(steps[i].get_bottom(), steps[i+1].get_top(),
+                      buff=0.18, stroke_width=3, max_tip_length_to_length_ratio=0.12, color=TEXT_COLOR)
+            arrows.add(a)
+        self.play(LaggedStart(*[Create(a) for a in arrows], lag_ratio=0.12), run_time=1.0)
+
+        # Mise en avant rapide de 3 points (remplit le temps sans “blanc”)
+        for idx in (0, 2, 4):
+            self.play(Indicate(steps[idx][0], scale_factor=1.04), run_time=0.6)
+            self.wait(0.25)
+
+        citation = Text("Données : ICNLSP 2025, p. 3 (Section 3) + slide 26",
+                        font_size=18, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC)\
+                        .to_corner(DR)
+        self.play(FadeIn(citation), run_time=0.4); self.wait(1.0)
+
+        self.play(FadeOut(arrows, run_time=0.6))
+        self.play(FadeOut(steps, shift=DOWN, run_time=0.8),
+                  FadeOut(citation, run_time=0.4),
+                  FadeOut(title, run_time=0.6))
+        self.wait(0.4)
+
+
+# ============================================================================
+# SCENE 3B: Proposed Pipeline — Figure (Image) (~45s)
+# ============================================================================
+class ScenePipelineFigure(Scene):
+    def construct(self):
+        title = Text("The Proposed Pipeline — Figure",
+                     font_size=46, color=ACCENT_BLUE, weight=BOLD).to_edge(UP, buff=0.45)
+        self.play(Write(title), run_time=1.0); self.wait(0.4)
+
+        # Ton image locale (assets/pipeline.png)
+        img = load_img("pipeline").scale(1.0)
+        # sécurité largeur
+        if img.width > config.frame_width * 1.04:
+            img.width = config.frame_width * 1.04
+        grp = Group(img).next_to(title, DOWN, buff=0.4)
+
+        cap = Text("Overview of the full data & SSML pipeline",
+                   font_size=20, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC)\
+                   .next_to(grp, DOWN, buff=0.35)
+
+        self.play(FadeIn(grp, shift=UP), run_time=1.0)
+        self.play(FadeIn(cap), run_time=0.4)
+        self.wait(2.0)
+
+        # zoom léger + pan pour donner vie à la figure
+        self.play(grp.animate.scale(1.06).shift(UP*0.06), run_time=0.8)
+        self.wait(1.2)
+
+        citation = Text("Figure: internal design (assets/pipeline.png)",
+                        font_size=18, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC)\
+                        .to_corner(DR)
+        self.play(FadeIn(citation), run_time=0.4); self.wait(0.8)
+
+        self.play(FadeOut(citation, run_time=0.4))
+        self.play(FadeOut(cap, run_time=0.5),
+                  FadeOut(grp, run_time=0.6),
+                  FadeOut(title, run_time=0.6))
+        self.wait(0.4)
 
 
 # ============================================================================
@@ -766,74 +702,227 @@ class SceneOutro(Scene):
 # MAIN SCENE: Full 10-minute video
 # ============================================================================
 class VideoComplet(Scene):
+    def construct(self):
+        # 0) Intro
+        intro = SceneIntro(); intro.renderer = self.renderer; intro.construct()
+        self._transition("Audio Signal Basics")
+
+        # 1) Basics
+        basics = SceneBasics(); basics.renderer = self.renderer; basics.construct()
+        self._transition("The TTS Problem")
+
+        # 2A) TTS Problem
+        problem_tts = SceneProblemTTS(); problem_tts.renderer = self.renderer; problem_tts.construct()
+        self._transition("SSML Challenges")
+
+        # 2B) SSML Challenges
+        problem_ssml = SceneProblemSSML(); problem_ssml.renderer = self.renderer; problem_ssml.construct()
+        self._transition("Pipeline — Interactive")
+
+        # 3A) Pipeline — Interactive
+        pipe_int = ScenePipelineInteractive(); pipe_int.renderer = self.renderer; pipe_int.construct()
+        self._transition("Pipeline — Figure")
+
+        # 3B) Pipeline — Figure (ton image)
+        pipe_fig = ScenePipelineFigure(); pipe_fig.renderer = self.renderer; pipe_fig.construct()
+        self._transition("Stage 1: Break Prediction")
+
+        # 4) Stage 1
+        stage1 = SceneStage1(); stage1.renderer = self.renderer; stage1.construct()
+        self._transition("Stage 2: Prosody Prediction")
+
+        # 5) Stage 2
+        stage2 = SceneStage2(); stage2.renderer = self.renderer; stage2.construct()
+        self._transition("SSML Example")
+
+        # 5bis) SSML example (image du cours)
+        ssml_img = SceneSSMLImage(); ssml_img.renderer = self.renderer; ssml_img.construct()
+        self._transition("Key Formulas")
+
+        # 5ter) Formules
+        formulas = SceneMathFormulas(); formulas.renderer = self.renderer; formulas.construct()
+        self._transition("Cascaded Architecture")
+
+        # 5quater) Architecture en cascade (si tu la gardes)
+        cascade_fig = SceneCascadeFigure(); cascade_fig.renderer = self.renderer; cascade_fig.construct()
+        self._transition("Objective Evaluation")
+
+        # 6) Objective eval
+        evalobj = SceneEvalObj(); evalobj.renderer = self.renderer; evalobj.construct()
+        self._transition("Subjective Evaluation")
+
+        # 7) Subjective eval
+        evalsubj = SceneEvalSubj(); evalsubj.renderer = self.renderer; evalsubj.construct()
+        self._transition("Conclusions")
+
+        # 8) Outro
+        outro = SceneOutro(); outro.renderer = self.renderer; outro.construct()
+
+    def _transition(self, next_scene_name: str):
+        t = Text(next_scene_name, font_size=52, color=ACCENT_YELLOW, weight=BOLD)
+        self.play(FadeIn(t, scale=1.2), run_time=1.0)
+        self.wait(0.8)
+        self.play(FadeOut(t, scale=0.9), run_time=1.0)
+        self.wait(0.6)
+
+
+class SceneSSMLImage(Scene):
+    def construct(self):
+        title = Text("SSML Example", font_size=44, color=YELLOW, weight=BOLD).to_edge(UP, buff=0.5)
+        self.play(Write(title), run_time=1.0)
+        img = load_img("exemple_ssml").scale(1.0)
+        if img.width > config.frame_width * 1.05:
+            img.width = config.frame_width * 1.05
+        cap = Text("Balises <prosody> / <break> — extrait du cours", font_size=20, color=GRAY, slant=ITALIC)
+        grp = Group(img, cap).arrange(DOWN, buff=0.3).to_edge(DOWN, buff=0.6)   # ← Group
+        self.play(FadeIn(img, shift=UP), FadeIn(cap), run_time=1.4)
+        self.wait(3)
+        self.play(*map(FadeOut, [title, grp]), run_time=0.8)
+
+class ScenePipelineFigure(Scene):
+    def construct(self):
+        title = Text("SSML Annotation Pipeline", font_size=44, color=YELLOW, weight=BOLD).to_edge(UP, buff=0.5)
+        self.play(Write(title))
+        img = load_img("pipeline").scale(1.0)
+        if img.width > config.frame_width * 1.05:
+            img.width = config.frame_width * 1.05
+        cap = Text("Figure — Overview of the pipeline", font_size=20, color=GRAY, slant=ITALIC)
+        grp = Group(img, cap).arrange(DOWN, buff=0.3).to_edge(DOWN, buff=0.6)   # ← Group au lieu de VGroup
+        self.play(FadeIn(img, shift=UP), FadeIn(cap))
+        self.wait(3)
+        self.play(*map(FadeOut, [title, grp]))
+
+class SceneCascadeFigure(Scene):
+    def construct(self):
+        title = Text("Cascaded Architecture (QwenA → QwenB)", font_size=44, color=YELLOW, weight=BOLD).to_edge(UP, buff=0.5)
+        self.play(Write(title))
+        img = load_img("cascade").scale(1.0)
+        if img.width > config.frame_width * 1.05:
+            img.width = config.frame_width * 1.05
+        cap = Text("Figure — Cascaded LLM for SSML", font_size=20, color=GRAY, slant=ITALIC)
+        grp = Group(img, cap).arrange(DOWN, buff=0.3).to_edge(DOWN, buff=0.6)   # ← Group
+        self.play(FadeIn(img, shift=UP), FadeIn(cap))
+        self.wait(3)
+        self.play(*map(FadeOut, [title, grp]))
+
+
+def show_formula(scene: Scene, latex: str, title: str, note: str | None = None):
+    y_title = Text(title, font_size=34, color=YELLOW, weight=BOLD).to_edge(UP, buff=0.5)
+    scene.play(Write(y_title), run_time=0.8)
+    try:
+        # Essaie LaTeX (si TeX est installé sur le serveur)
+        formula = MathTex(latex).scale(1.2)
+        scene.play(Write(formula), run_time=1.6)
+    except Exception:
+        # Fallback sans LaTeX → remplace les backslashes pour un affichage propre
+        safe = latex.replace("\\", "")
+        formula = Text(safe, font_size=28, color=WHITE).scale(0.9)
+        scene.play(FadeIn(formula, shift=UP), run_time=1.2)
+    elems = [y_title, formula]
+    if note:
+        caption = Text(note, font_size=22, color=GRAY, slant=ITALIC).next_to(formula, DOWN, buff=0.4)
+        scene.play(FadeIn(caption), run_time=0.6)
+        elems.append(caption)
+    scene.wait(2)
+    scene.play(*[FadeOut(e) for e in elems], run_time=0.8)
+
+
+class SceneMathFormulas(Scene):
     """
-    Main scene that orchestrates all 8 scenes
-    Total duration: ~600s (10 minutes)
+    Formules clés : semitones, pourcentage de pitch, MAE, F1
     """
     def construct(self):
-        # Scene 0: Introduction (30s)
-        intro = SceneIntro()
-        intro.renderer = self.renderer
-        intro.construct()
-        self._transition("Audio Signal Basics")
-        
-        # Scene 1: Audio Basics (90s)
-        basics = SceneBasics()
-        basics.renderer = self.renderer
-        basics.construct()
-        self._transition("The TTS Problem")
-        
-        # Scene 2: TTS Problem (75s)
-        problem = SceneProblem()
-        problem.renderer = self.renderer
-        problem.construct()
-        self._transition("The Proposed Pipeline")
-        
-        # Scene 3: Pipeline (90s)
-        pipeline = ScenePipeline()
-        pipeline.renderer = self.renderer
-        pipeline.construct()
-        self._transition("Stage 1: Break Prediction")
-        
-        # Scene 4: Stage 1 (60s)
-        stage1 = SceneStage1()
-        stage1.renderer = self.renderer
-        stage1.construct()
-        self._transition("Stage 2: Prosody Prediction")
-        
-        # Scene 5: Stage 2 (60s)
-        stage2 = SceneStage2()
-        stage2.renderer = self.renderer
-        stage2.construct()
-        self._transition("Objective Evaluation")
-        
-        # Scene 6: Objective Evaluation (75s)
-        evalobj = SceneEvalObj()
-        evalobj.renderer = self.renderer
-        evalobj.construct()
-        self._transition("Subjective Evaluation")
-        
-        # Scene 7: Subjective Evaluation (60s)
-        evalsubj = SceneEvalSubj()
-        evalsubj.renderer = self.renderer
-        evalsubj.construct()
-        self._transition("Conclusions")
-        
-        # Scene 8: Conclusions (30s)
-        outro = SceneOutro()
-        outro.renderer = self.renderer
-        outro.construct()
-    
-    def _transition(self, next_scene_name):
-        """Create a smooth transition between scenes"""
-        transition_text = Text(
-            next_scene_name,
-            font_size=52,
-            color=ACCENT_YELLOW,
-            weight=BOLD
+        # 1) Semitone offset
+        show_formula(
+            self,
+            r"s_i = 12 \cdot \log_2\!\left(\frac{f_0(i)}{f_{0,\mathrm{ref}}}\right)",
+            "Pitch → Semitone",
+            "Référence: f_{0,ref} (ex: médiane locuteur·rice)"
         )
-        
-        self.play(FadeIn(transition_text, scale=1.2), run_time=1)
-        self.wait(1)  # Longer pause for reading
-        self.play(FadeOut(transition_text, scale=0.8), run_time=1)
-        self.wait(1)
+        # 2) Pourcentage de pitch
+        show_formula(
+            self,
+            r"p_i = \big(2^{\,s_i/12}-1\big)\times 100\%",
+            "Semitone → % Pitch",
+            "Interprétation pédagogique : variation relative du F0"
+        )
+        # 3) MAE
+        show_formula(
+            self,
+            r"\mathrm{MAE}=\frac{1}{N}\sum_{i=1}^{N}\left|\,\hat{y}_i - y_i\,\right|",
+            "Erreur absolue moyenne (MAE)",
+            "Utilisée pour pitch/volume/rate (QwenB vs. baseline)"
+        )
+        # 4) F1 (break prediction)
+        show_formula(
+            self,
+            r"F_1=2\cdot\frac{P\cdot R}{P+R}",
+            "F1-score",
+            "P: précision, R: rappel — QwenA ≈ 99.2% sur les pauses"
+        )
+
+"""
+# ============================================================================
+# MAIN SCENE: Full ~10-minute video (orchestrator)
+# ============================================================================
+class VideoComplet(Scene):
+
+    def construct(self):
+        # 0) Intro
+        intro = SceneIntro(); intro.renderer = self.renderer; intro.construct()
+        self._transition("Audio Signal Basics")
+
+        # 1) Basics
+        basics = SceneBasics(); basics.renderer = self.renderer; basics.construct()
+        self._transition("The TTS Problem")
+
+        # 2) Problem
+        problem = SceneProblem(); problem.renderer = self.renderer; problem.construct()
+        self._transition("The Proposed Pipeline")
+
+        # 3) Pipeline (animated boxes)
+        pipeline = ScenePipeline(); pipeline.renderer = self.renderer; pipeline.construct()
+        self._transition("Pipeline Figure")
+
+        # 3bis) Pipeline (publication figure PNG)
+        spf = ScenePipelineFigure(); spf.renderer = self.renderer; spf.construct()
+        self._transition("Stage 1: Break Prediction")
+
+        # 4) Stage 1
+        stage1 = SceneStage1(); stage1.renderer = self.renderer; stage1.construct()
+        self._transition("Stage 2: Prosody Prediction")
+
+        # 5) Stage 2
+        stage2 = SceneStage2(); stage2.renderer = self.renderer; stage2.construct()
+        self._transition("SSML Example")
+
+        # 5bis) SSML example (image issue du cours)
+        ssml_img = SceneSSMLImage(); ssml_img.renderer = self.renderer; ssml_img.construct()
+        self._transition("Key Formulas")
+
+        # 5ter) Formules mathématiques (pédagogie)
+        formulas = SceneMathFormulas(); formulas.renderer = self.renderer; formulas.construct()
+        self._transition("Cascaded Architecture")
+
+        # 5quater) Architecture en cascade (figure PNG)
+        cascade_fig = SceneCascadeFigure(); cascade_fig.renderer = self.renderer; cascade_fig.construct()
+        self._transition("Objective Evaluation")
+
+        # 6) Objective eval
+        evalobj = SceneEvalObj(); evalobj.renderer = self.renderer; evalobj.construct()
+        self._transition("Subjective Evaluation")
+
+        # 7) Subjective eval
+        evalsubj = SceneEvalSubj(); evalsubj.renderer = self.renderer; evalsubj.construct()
+        self._transition("Conclusions")
+
+        # 8) Outro
+        outro = SceneOutro(); outro.renderer = self.renderer; outro.construct()
+
+    def _transition(self, next_scene_name: str):
+        t = Text(next_scene_name, font_size=52, color=ACCENT_YELLOW, weight=BOLD)
+        self.play(FadeIn(t, scale=1.2), run_time=1.0)
+        self.wait(0.8)
+        self.play(FadeOut(t, scale=0.9), run_time=1.0)
+        self.wait(0.6)
+"""
