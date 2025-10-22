@@ -119,26 +119,45 @@ class SceneBasics(Scene):
         self.play(FadeIn(wf_desc), FadeIn(wf_cite), run_time=0.7)
         self.wait(10)
 
-        self.play(FadeOut(waveform_title), FadeOut(wf), FadeOut(wf_desc), FadeOut(wf_cite), run_time=0.8)
+        # EFFACER TOUT de la section waveform AVANT de passer à la suivante
+        self.play(
+            FadeOut(waveform_title), FadeOut(wf), FadeOut(wf_desc), FadeOut(wf_cite),
+            run_time=0.8
+        )
         self.wait(0.35)
 
         # ===== SPECTROGRAM (≈30s) =====
         spect_title = Text("Spectrogram: Frequency Energy over Time", font_size=32, color=ACCENT_YELLOW).next_to(title, DOWN, buff=0.5)
-        self.play(Write(spect_title), run_time=1.0)
+        self.play(Write(spect_title), run_time=0.7) 
 
-        sp = load_img("spectrogramme").scale(1.0)
+        sp = load_img("spectrogramme").scale(0.6)
         if sp.width > config.frame_width * 1.05:
             sp.width = config.frame_width * 1.05
         sp.shift(DOWN * 0.2)
 
-        sp_desc = Text("Window 20–30 ms • Hop ≈10 ms • Hann + FFT", font_size=22, color=TEXT_COLOR).next_to(sp, DOWN, buff=0.35)
+        sp_desc = Text(
+            "Window 20–30 ms • Hop ≈10 ms • Hann + FFT\n"
+            "→ Short window to capture temporal evolution\n"
+            "→ Overlap (hop) to smooth transitions\n"
+            "→ FFT: transforms signal into frequencies",
+            font_size=20, color=TEXT_COLOR, line_spacing=1.1
+        ).next_to(sp, DOWN, buff=0.35)
         sp_cite = Text("Databootcamp TTS Course", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
 
-        self.play(FadeIn(sp, shift=UP), run_time=1.0)
-        self.play(FadeIn(sp_desc), FadeIn(sp_cite), run_time=0.6)
-        self.wait(12)
+        self.play(FadeIn(sp, shift=UP), run_time=0.6)
+        
+        # CORRECTION : sp_cite HORS de la boucle
+        for line in sp_desc:
+            self.play(FadeIn(line), run_time=0.12)
+        self.play(FadeIn(sp_cite), run_time=0.5)  # ← DÉPLACÉ après la boucle
+        
+        self.wait(8)  # Temps pour lire le spectrogramme
 
-        self.play(FadeOut(spect_title), FadeOut(sp), FadeOut(sp_desc), FadeOut(sp_cite), run_time=0.8)
+        # EFFACER TOUT de la section spectrogramme
+        self.play(
+            FadeOut(spect_title), FadeOut(sp), FadeOut(sp_desc), FadeOut(sp_cite),
+            run_time=0.8
+        )
         self.wait(0.2)
 
         # ===== PITCH/F0 (≈29s) =====
@@ -146,7 +165,7 @@ class SceneBasics(Scene):
         self.play(Write(pitch_title), run_time=1.0)
 
         # ⚠️ Linux est sensible à la casse : fichier 'F0.png'
-        f0img = load_img("f0").scale(1.0)
+        f0img = load_img("f0").scale(1.2)
         if f0img.width > config.frame_width * 1.05:
             f0img.width = config.frame_width * 1.05
         f0img.shift(DOWN * 0.2)
@@ -162,121 +181,281 @@ class SceneBasics(Scene):
         self.play(FadeIn(pitch_desc), FadeIn(pitch_cite), run_time=0.6)
         self.wait(12)
 
-        self.play(FadeOut(title), FadeOut(pitch_title), FadeOut(f0img), FadeOut(pitch_desc), FadeOut(pitch_cite), run_time=0.9)
+        # FIN - effacer tout
+        self.play(
+            FadeOut(title), FadeOut(pitch_title), FadeOut(f0img), 
+            FadeOut(pitch_desc), FadeOut(pitch_cite),
+            run_time=0.9
+        )
         self.wait(0.1)
 
 # ============================================================================
 # SCENE 1bis: Prosody Primer (definitions + SSML + references, 1 page)
 # ============================================================================
+from manim import *
+import numpy as np
+
+# -------------------------------------------------------------------
+# Thème & config
+# -------------------------------------------------------------------
+config.text_backend = "pango"
+config.disable_latex = True
+
+BG_COLOR      = "#0B1026"
+ACCENT_BLUE   = "#1363DF"
+ACCENT_YELLOW = "#E5007D"
+TEXT_COLOR    = "#F4F6FA"
+ACCENT_PURPLE = "#5A1E86"
+ACCENT_CYAN   = "#14B8FF"
+HI_GREY       = "#9AA3B2"
+
+config.background_color = BG_COLOR
+np.random.seed(7)
+
+# -------------------------------------------------------------------
+# Petits utilitaires visuels (sans boîtes)
+# -------------------------------------------------------------------
+def subtle_background(width=config.frame_width, height=config.frame_height):
+    """Grille de points + lignes fines, très faible opacité."""
+    dots = VGroup()
+    step = 0.6
+    for x in np.arange(-width/2, width/2 + 1e-6, step):
+        for y in np.arange(-height/2, height/2 + 1e-6, step):
+            d = Dot(point=[x, y, 0], radius=0.008, color=HI_GREY)
+            d.set_opacity(0.08)
+            dots.add(d)
+    # Quelques lignes diagonales très légères
+    diag1 = Line(LEFT*7+DOWN*3.6, RIGHT*7+UP*3.6, stroke_width=1).set_color(HI_GREY).set_opacity(0.06)
+    diag2 = Line(LEFT*7+UP*3.2, RIGHT*7+DOWN*3.2, stroke_width=1).set_color(HI_GREY).set_opacity(0.04)
+    return VGroup(dots, diag1, diag2)
+
+def under_title(txt: str, color=ACCENT_BLUE, font_size=46):
+    """Titre avec soulignement courbe (sans rectangle)."""
+    t = Text(txt, font="DejaVu Sans", weight=BOLD, font_size=font_size, color=color)
+    underline = Line(t.get_bottom()+DOWN*0.06+LEFT*0.1, t.get_bottom()+DOWN*0.06+RIGHT*0.1, stroke_width=3)
+    underline.set_color(color)
+    return VGroup(t, underline).arrange(DOWN, buff=0.08)
+
+def chip(label: str, color=ACCENT_BLUE, font_size=26):
+    """
+    Tag minimaliste : • pastille + tiret + label (sans box).
+    Exemple d’usage : chip("Pitch (F0)", ACCENT_CYAN)
+    """
+    bullet = Dot(radius=0.06, color=color)
+    dash = Line(ORIGIN, RIGHT*0.5, stroke_width=3, color=color)
+    txt = Text(label, font="DejaVu Sans", font_size=font_size, color=TEXT_COLOR)
+    g = VGroup(bullet, dash, txt).arrange(RIGHT, buff=0.18, aligned_edge=DOWN)
+    return g
+
+def ssml_line(ssml: str):
+    """
+    Extrait SSML sur une ligne de base (monospace), sans encadré.
+    """
+    base = Line(ORIGIN, RIGHT*6.2, stroke_width=2).set_color(HI_GREY).set_opacity(0.35)
+    code = Text(ssml, font="DejaVu Sans Mono", font_size=22, color=HI_GREY, slant=ITALIC)
+    code.next_to(base, UP, buff=0.12).align_to(base, LEFT)
+    return VGroup(base, code)
+
+def tiny_legend(items):
+    """
+    items: list[(label:str, color:str)]
+    Rend une petite légende en ligne (pastilles + labels).
+    """
+    groups = []
+    for label, color in items:
+        dot = Dot(radius=0.05, color=color)
+        tx  = Text(label, font="DejaVu Sans", font_size=18, color=HI_GREY)
+        g   = VGroup(dot, tx).arrange(RIGHT, buff=0.12)
+        groups.append(g)
+    return VGroup(*groups).arrange(RIGHT, buff=0.5)
+
+def flowing_path():
+    """Chemin courbe doux pour un curseur animé (mouvement subtil de gauche à droite)."""
+    p = VMobject(stroke_width=3).set_color(ACCENT_BLUE).set_opacity(0.25)
+    pts = [
+        LEFT*6 + DOWN*1.2,
+        LEFT*2.5 + UP*0.2,
+        RIGHT*1.5 + DOWN*0.1,
+        RIGHT*6 + UP*0.8,
+    ]
+    p.set_points_smoothly([*pts])
+    return p
+
+def moving_cursor_along(path: VMobject, color=WHITE):
+    """Petit curseur lumineux qui glisse sur le chemin."""
+    dot = Dot(radius=0.08, color=color).set_glow_factor(0.6)
+    return dot, MoveAlongPath(dot, path, rate_func=rate_functions.smooth)
+
+# -------------------------------------------------------------------
+# Données sémantiques
+# -------------------------------------------------------------------
+PARAMS = [
+    dict(
+        key="Pitch (F0)",
+        color=ACCENT_CYAN,
+        what="Perceived vocal pitch (fundamental frequency).",
+        controls="Emphasis, interrogative contours, emotions, boundary tones.",
+        ssml='<prosody pitch="+5%">important</prosody>',
+        impact="Higher → excitement / Lower → seriousness / Variability → naturalness."
+    ),
+    dict(
+        key="Volume (Loudness)",
+        color=ACCENT_YELLOW,
+        what="Perceived intensity/energy of speech.",
+        controls="Prominence, emotional intensity, attention focus.",
+        ssml='<prosody volume="+8dB">listen!</prosody>',
+        impact="Loud → emphasis / Soft → intimacy / Dynamics → engagement."
+    ),
+    dict(
+        key="Rate (Speech Tempo)",
+        color=ACCENT_PURPLE,
+        what="Speed of articulation and pacing.",
+        controls="Urgency, clarity, emphasis, speaker personality.",
+        ssml='<prosody rate="slow">carefully</prosody>',
+        impact="Fast → excitement / Slow → importance / Variation → rhythm."
+    ),
+    dict(
+        key="Breaks (Pauses)",
+        color=ACCENT_BLUE,
+        what="Strategic silences between phrases.",
+        controls="Structure, breathing, emphasis, comprehension.",
+        ssml='<break time="500ms"/>',
+        impact="Short → rhythm / Long → emphasis / Placement → clarity."
+    ),
+]
+
+# -------------------------------------------------------------------
+# Scène principale (multi-“slides” dans la même scène, pas de boîtes)
+# -------------------------------------------------------------------
 class SceneProsodyPrimer(Scene):
-    def _card(self, title, color, defs: list[str], ssml: str, tips: list[str]):
-        # Title
-        head = Text(title, font_size=28, color=color, weight=BOLD, font="DejaVu Sans")
-        # Definition / role
-        defs_v = VGroup(*[
-            Text(d, font_size=20, color=TEXT_COLOR, font="DejaVu Sans")
-            for d in defs
-        ]).arrange(DOWN, aligned_edge=LEFT, buff=0.12)
-
-        # SSML (monospace + background)
-        code = Text(ssml, font_size=18, color=HI_GREY, font="DejaVu Sans Mono")
-        code_bg = RoundedRectangle(corner_radius=0.12, stroke_color=HI_GREY, stroke_width=1.5)
-        code_bg.set_fill(color=BLACK, opacity=0.22)
-        code_bg.surround(code, buff=0.18)
-        code_block = VGroup(code_bg, code)
-
-        # Tips / references
-        tips_v = VGroup(*[
-            Text(t, font_size=18, color=HI_GREY, font="DejaVu Sans")
-            for t in tips
-        ]).arrange(DOWN, aligned_edge=LEFT, buff=0.08)
-
-        content = VGroup(head, defs_v, code_block, tips_v).arrange(
-            DOWN, aligned_edge=LEFT, buff=0.18
-        )
-        rect = RoundedRectangle(corner_radius=0.20, stroke_color=color, stroke_width=3)
-        rect.surround(content, buff=0.28)
-        return VGroup(rect, content)
-
     def construct(self):
-        title = Text(
-            "Prosody — the building blocks",
-            font_size=46, color=ACCENT_BLUE, weight=BOLD, font="DejaVu Sans"
-        ).to_edge(UP, buff=0.45)
-        self.play(Write(title), run_time=0.9)
+        # --- Fond subtil
+        bg = subtle_background()
+        self.add(bg)
 
-        # ---- 4 cards with definitions, SSML, references ----------------------
-        pitch = self._card(
-            "Pitch (F0)",
-            ACCENT_CYAN,
-            defs=[
-                "Perceived pitch ↔ vibration frequency (Hz).",
-                "We reason in semitones/% → relative variations."
-            ],
-            ssml='<prosody pitch="+2%">word</prosody>',
-            tips=["Reference: ±1–3% ≃ subtle, ±6% ≃ very audible."]
+        # --- En-tête
+        title = under_title("Prosody Control Parameters", color=ACCENT_BLUE, font_size=44)
+        title.to_edge(UP, buff=0.6)
+        subtitle = Text(
+            "How pitch, loudness, rate, and pauses shape naturalness",
+            font="DejaVu Sans", font_size=22, color=HI_GREY
+        ).next_to(title, DOWN, buff=0.25)
+
+        self.play(FadeIn(title, shift=DOWN*0.2), FadeIn(subtitle, shift=DOWN*0.2), run_time=0.8)
+        self.wait(0.2)
+
+        # --- Chemin fluide + curseur (mouvement ambiant)
+        path = flowing_path()
+        cursor, cursor_anim = moving_cursor_along(path, color=TEXT_COLOR)
+        path.shift(DOWN*0.8)
+        self.play(Create(path), run_time=0.8)
+        self.add(cursor)
+        self.play(cursor_anim, run_time=4.2)
+        self.wait(0.1)
+
+        # --- Légende
+        legend = tiny_legend([
+            ("Pitch", ACCENT_CYAN),
+            ("Loudness", ACCENT_YELLOW),
+            ("Rate", ACCENT_PURPLE),
+            ("Breaks", ACCENT_BLUE),
+        ])
+        legend.to_edge(DOWN, buff=0.4)
+        self.play(FadeIn(legend, shift=UP*0.2), run_time=0.5)
+
+        # --- “Slides” paramétriques (sans rectangles)
+        slides = []
+        for p in PARAMS:
+            # Tag (pastille + tiret + label)
+            tag = chip(p["key"], color=p["color"], font_size=30)
+
+            # Bloc sémantique aéré (What / Controls / Impact)
+            what = Text("What", font="DejaVu Sans", weight=BOLD, font_size=22, color=p["color"])
+            what_txt = Text(p["what"], font="DejaVu Sans", font_size=22, color=TEXT_COLOR)
+            row_what = VGroup(what, what_txt).arrange(RIGHT, buff=0.2, aligned_edge=UP)
+
+            controls = Text("Controls", font="DejaVu Sans", weight=BOLD, font_size=22, color=p["color"])
+            controls_txt = Text(p["controls"], font="DejaVu Sans", font_size=22, color=TEXT_COLOR)
+            row_ctrl = VGroup(controls, controls_txt).arrange(RIGHT, buff=0.2, aligned_edge=UP)
+
+            impact = Text("Impact", font="DejaVu Sans", weight=BOLD, font_size=22, color=p["color"])
+            impact_txt = Text(p["impact"], font="DejaVu Sans", font_size=22, color=TEXT_COLOR)
+            row_imp = VGroup(impact, impact_txt).arrange(RIGHT, buff=0.2, aligned_edge=UP)
+
+            # SSML “sur ligne”
+            ssml = ssml_line(p["ssml"])
+
+            # Mise en page :
+            #   Colonne gauche : tag + What/Controls/Impact
+            #   Colonne droite : SSML + motif graphique associé
+            left_col = VGroup(tag, row_what, row_ctrl, row_imp).arrange(DOWN, buff=0.24, aligned_edge=LEFT)
+            left_col.to_edge(LEFT, buff=1.1).shift(DOWN*0.3)
+
+            right_col = VGroup(ssml).arrange(DOWN, buff=0.3, aligned_edge=LEFT)
+            right_col.to_edge(RIGHT, buff=1.0).shift(DOWN*0.2)
+
+            # Motif graphique : courbe dédiée au paramètre (couleur propre)
+            motif = path.copy().set_color(p["color"]).set_opacity(0.18)
+            motif.scale(0.9).shift(UP*0.3 + RIGHT*0.2)
+            right_col.add(motif)
+
+            slide = VGroup(left_col, right_col)
+            slide.set_opacity(0)  # masqué avant animation
+            slides.append(slide)
+
+        # Affichage séquentiel des “slides”
+        for i, slide in enumerate(slides):
+            self.add(slide)
+            self.play(slide.animate.set_opacity(1), run_time=0.5)
+
+            # Accent léger : souligner le tag puis faire “respirer”
+            tag_label = slide[0][0]  # chip(...)
+            accent = Line(
+                tag_label.get_bottom()+DOWN*0.12+LEFT*0.1,
+                tag_label.get_bottom()+DOWN*0.12+RIGHT*0.1,
+                stroke_width=4
+            ).set_color(PARAMS[i]["color"])
+            self.play(GrowFromCenter(accent), run_time=0.25)
+            self.wait(0.25)
+            self.play(FadeOut(accent), run_time=0.2)
+
+            # Mise en évidence du SSML en glissant un petit “cursor” dessus
+            ssml_group = slides[i][1][0]  # (base line, code)
+            base_line = ssml_group[0]
+            marker = Triangle(stroke_width=0, fill_opacity=1.0).set_color(PARAMS[i]["color"]).scale(0.08)
+            marker.move_to(base_line.get_left()).shift(UP*0.12)
+            self.add(marker)
+            self.play(marker.animate.move_to(base_line.get_right()+UP*0.12), run_time=0.8)
+            self.play(FadeOut(marker), run_time=0.2)
+
+            # Transition vers le slide suivant
+            if i < len(slides) - 1:
+                self.play(slide.animate.set_opacity(0), run_time=0.35)
+                self.remove(slide)
+
+        # --- Conclusion compacte (pipeline)
+        pipeline_title = Text(
+            "Prosody Control Pipeline",
+            font="DejaVu Sans", font_size=26, color=ACCENT_BLUE, weight=BOLD
+        ).to_edge(DOWN, buff=1.0)
+
+        steps = Text(
+            "Analyze speech → Extract parameters → Apply via SSML → Synthesize natural output",
+            font="DejaVu Sans", font_size=22, color=TEXT_COLOR
+        ).next_to(pipeline_title, UP, buff=0.3).align_on_border(DOWN, buff=1.6)
+
+        connector = Line(LEFT*5.2, RIGHT*5.2, stroke_width=2).set_color(HI_GREY).set_opacity(0.25)
+        connector.next_to(steps, UP, buff=0.35)
+
+        self.play(FadeIn(connector, shift=UP*0.2), FadeIn(steps, shift=UP*0.2), FadeIn(pipeline_title, shift=UP*0.2), run_time=0.6)
+        self.wait(0.8)
+
+        # Sortie propre
+        self.play(
+            *[FadeOut(m) for m in [steps, pipeline_title, legend, path, cursor, title, subtitle, bg, connector]],
+            run_time=0.7
         )
 
-        volume = self._card(
-            "Volume (loudness)",
-            ACCENT_YELLOW,
-            defs=[
-                "Sensation of intensity (correlated with sound level).",
-                "Practical measure: LUFS → control via gain %."
-            ],
-            ssml='<prosody volume="-8%">softer</prosody>',
-            tips=["Reference: −10% calms, +5% emphasizes."]
-        )
-
-        rate = self._card(
-            "Rate (tempo)",
-            ACCENT_PURPLE,
-            defs=[
-                "Speech speed (words/s or relative %).",
-                "Slower = emphasis; faster = linking."
-            ],
-            ssml='<prosody rate="-3%">slower</prosody>',
-            tips=["Reference: ±1–3% suffices in most cases."]
-        )
-
-        breaks = self._card(
-            "Breaks (pauses)",
-            ACCENT_BLUE,
-            defs=[
-                "Silences to delimit phrases/breaths.",
-                "QwenA places the pause, QwenB adjusts the duration."
-            ],
-            ssml='<break time="350ms"/>',
-            tips=["Reference: 250–500 ms between phrases."]
-        )
-
-        row = VGroup(pitch, volume, rate, breaks).arrange(RIGHT, buff=0.5, aligned_edge=UP)
-        row.next_to(title, DOWN, buff=0.5)
-
-        # Auto-fit to fit on one page (under title)
-        max_w = config.frame_width * 0.96
-        if row.width > max_w:
-            row.scale_to_fit_width(max_w)
-
-        # Progressive appearance (readable)
-        for card in row:
-            card.set_opacity(0)
-        self.add(row)
-        for card in row:
-            self.play(card.animate.set_opacity(1), run_time=0.45)
-            self.play(Indicate(card[0], scale_factor=1.03), run_time=0.30)
-
-        # Bottom caption
-        legend = Text(
-            "Pipeline usage: extract (F0/LUFS/tempo/pauses) → convert to % → generate SSML.",
-            font_size=20, color=HI_GREY, slant=ITALIC, font="DejaVu Sans"
-        ).to_edge(DOWN, buff=0.6)
-        self.play(FadeIn(legend, shift=UP), run_time=0.4)
-        self.wait(0.6)
-
-        self.play(FadeOut(legend, run_time=0.4),
-                  FadeOut(row, shift=DOWN, run_time=0.6),
-                  FadeOut(title, run_time=0.6))
 # ============================================================================
 # SCENE 2A: TTS Expressivity Problem (~35s)
 # ============================================================================
@@ -1105,68 +1284,4 @@ class SceneMathFormulas(Scene):
             "P: précision, R: rappel — QwenA ≈ 99.2% sur les pauses"
         )
 
-"""
 # ============================================================================
-# MAIN SCENE: Full ~10-minute video (orchestrator)
-# ============================================================================
-class VideoComplet(Scene):
-
-    def construct(self):
-        # 0) Intro
-        intro = SceneIntro(); intro.renderer = self.renderer; intro.construct()
-        self._transition("Audio Signal Basics")
-
-        # 1) Basics
-        basics = SceneBasics(); basics.renderer = self.renderer; basics.construct()
-        self._transition("The TTS Problem")
-
-        # 2) Problem
-        problem = SceneProblem(); problem.renderer = self.renderer; problem.construct()
-        self._transition("The Proposed Pipeline")
-
-        # 3) Pipeline (animated boxes)
-        pipeline = ScenePipeline(); pipeline.renderer = self.renderer; pipeline.construct()
-        self._transition("Pipeline Figure")
-
-        # 3bis) Pipeline (publication figure PNG)
-        spf = ScenePipelineFigure(); spf.renderer = self.renderer; spf.construct()
-        self._transition("Stage 1: Break Prediction")
-
-        # 4) Stage 1
-        stage1 = SceneStage1(); stage1.renderer = self.renderer; stage1.construct()
-        self._transition("Stage 2: Prosody Prediction")
-
-        # 5) Stage 2
-        stage2 = SceneStage2(); stage2.renderer = self.renderer; stage2.construct()
-        self._transition("SSML Example")
-
-        # 5bis) SSML example (image issue du cours)
-        ssml_img = SceneSSMLImage(); ssml_img.renderer = self.renderer; ssml_img.construct()
-        self._transition("Key Formulas")
-
-        # 5ter) Formules mathématiques (pédagogie)
-        formulas = SceneMathFormulas(); formulas.renderer = self.renderer; formulas.construct()
-        self._transition("Cascaded Architecture")
-
-        # 5quater) Architecture en cascade (figure PNG)
-        cascade_fig = SceneCascadeFigure(); cascade_fig.renderer = self.renderer; cascade_fig.construct()
-        self._transition("Objective Evaluation")
-
-        # 6) Objective eval
-        evalobj = SceneEvalObj(); evalobj.renderer = self.renderer; evalobj.construct()
-        self._transition("Subjective Evaluation")
-
-        # 7) Subjective eval
-        evalsubj = SceneEvalSubj(); evalsubj.renderer = self.renderer; evalsubj.construct()
-        self._transition("Conclusions")
-
-        # 8) Outro
-        outro = SceneOutro(); outro.renderer = self.renderer; outro.construct()
-
-    def _transition(self, next_scene_name: str):
-        t = Text(next_scene_name, font_size=52, color=ACCENT_YELLOW, weight=BOLD)
-        self.play(FadeIn(t, scale=1.2), run_time=1.0)
-        self.wait(0.8)
-        self.play(FadeOut(t, scale=0.9), run_time=1.0)
-        self.wait(0.6)
-"""
