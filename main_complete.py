@@ -693,43 +693,128 @@ class SceneProblemTTS(Scene):
 # SCENE 2B: SSML Challenges (~40s)
 # ============================================================================
 class SceneProblemSSML(Scene):
+    # Timings (ajuste ici au besoin)
+    T_IN_TITLE   = 1.0
+    T_IN_BLOCK   = 0.9
+    T_LIST       = 2.0
+    T_DWELL_1    = 1.2
+    T_TRANSITION = 0.7
+    T_IN_S2      = 0.8
+    T_DWELL_2    = 1.2
+    T_OUT        = 0.8
+
+    FONT_SANS = "DejaVu Sans"  # police robuste avec Pango
+
+    def T(self, s, **kw):
+        """Text wrapper: applique la même police partout."""
+        kw.setdefault("font", self.FONT_SANS)
+        return Text(s, **kw)
+
     def construct(self):
-        title = Text("SSML Challenges", font_size=48, color=ACCENT_BLUE, weight=BOLD)
-        title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=1.2); self.wait(0.4)
+        # --- Titre (persiste sur 2 slides)
+        title = under_title("SSML Challenges", color=ACCENT_BLUE, font_size=46, font=self.FONT_SANS)
+        title.to_edge(UP, buff=0.55)
+        self.play(FadeIn(title, shift=DOWN*0.2), run_time=self.T_IN_TITLE)
+        self.wait(0.15)
 
-        heading = Text("Why SSML is hard in practice", font_size=34, color=ACCENT_YELLOW, weight=BOLD)
+        # =========================
+        # SLIDE 1 : Why SSML is hard in practice
+        # =========================
+        heading = self.T("Why SSML is hard in practice", font_size=32, color=ACCENT_YELLOW, weight=BOLD)
+        bullet_items = [
+            "• Manual markup does not scale",
+            "• LLMs often omit or misplace closing tags",
+            "• Invalid / non-standard attributes and values",
+            "• Imprecise prosodic control across engines",
+            "• Vendor dialects diverge from W3C baseline",
+        ]
+        bullets = VGroup(*[
+            self.T(item, font_size=26, color=TEXT_COLOR) for item in bullet_items
+        ]).arrange(DOWN, aligned_edge=LEFT, buff=0.26)
 
-        bullets = VGroup(
-            Text("✗ Manual markup doesn't scale",    font_size=26, color=TEXT_COLOR),
-            Text("✗ LLMs produce incomplete tags",  font_size=26, color=TEXT_COLOR),
-            Text("✗ Invalid syntax generation",     font_size=26, color=TEXT_COLOR),
-            Text("✗ Imprecise prosodic control",    font_size=26, color=TEXT_COLOR),
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.28)
+        slide1 = VGroup(heading, bullets).arrange(DOWN, aligned_edge=LEFT, buff=0.42)
+        slide1.next_to(title, DOWN, buff=0.8).to_edge(LEFT, buff=1.2)
 
-        content = VGroup(heading, bullets).arrange(DOWN, aligned_edge=LEFT, buff=0.45)
+        self.play(FadeIn(heading, shift=UP*0.12), run_time=self.T_IN_BLOCK)
+        self.play(LaggedStart(*[FadeIn(b, shift=UP*0.08) for b in bullets], lag_ratio=0.22), run_time=self.T_LIST)
+        self.wait(self.T_DWELL_1)
 
-        panel = RoundedRectangle(corner_radius=0.25, width=10.8, height=4.6, stroke_width=2, stroke_color=ACCENT_BLUE)
-        panel.set_fill(BG_COLOR, opacity=0.0)
-        content.move_to(panel.get_center())
+        self.play(Indicate(bullets[0], scale_factor=1.05), run_time=0.7); self.wait(0.3)
+        self.play(Indicate(bullets[3], scale_factor=1.05), run_time=0.7); self.wait(0.42)
 
-        card = Group(panel, content).next_to(title, DOWN, buff=0.6)
+        # =========================
+        # TRANSITION → SLIDE 2
+        # =========================
+        self.play(FadeOut(slide1), run_time=self.T_TRANSITION)
 
-        self.play(Create(panel), run_time=0.8)
-        self.play(FadeIn(heading, shift=UP), run_time=0.6)
-        self.play(LaggedStart(*[FadeIn(b, shift=UP) for b in bullets], lag_ratio=0.22), run_time=2.6)
-        self.wait(1.2)
+        # =========================
+        # SLIDE 2 : Typical failure patterns (UNE SEULE COLONNE)
+        # =========================
+        heading2 = self.T("Typical failure patterns", font_size=32, color=ACCENT_CYAN, weight=BOLD)
 
-        # mini “callout” pédagogique sur deux points
-        self.play(Indicate(bullets[0], scale_factor=1.06), run_time=0.7); self.wait(0.3)
-        self.play(Indicate(bullets[3], scale_factor=1.06), run_time=0.7); self.wait(0.6)
+        cat1 = VGroup(
+            self.T("• Syntax: unclosed/misaligned tags, bad nesting", font_size=26, color=TEXT_COLOR),
+            self.T("• Escaping issues in XML contexts",              font_size=26, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
 
-        citation = Text("Données : ICNLSP 2025, p. 1–2", font_size=18, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC).to_corner(DR)
-        self.play(FadeIn(citation), run_time=0.5); self.wait(0.8)
+        cat2 = VGroup(
+            self.T("• Semantics: unsupported params or units",       font_size=26, color=TEXT_COLOR),
+            self.T("• Engine-specific ranges silently clipped",      font_size=26, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
 
-        self.play(FadeOut(citation, run_time=0.4))
-        self.play(FadeOut(card, shift=DOWN, run_time=0.8), FadeOut(title, run_time=0.8))
-        self.wait(0.5)
+        cat3 = VGroup(
+            self.T("• Control: conflicting nested <prosody>",        font_size=26, color=TEXT_COLOR),
+            self.T("• Global vs local overrides not explicit",       font_size=26, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+
+        cat4 = VGroup(
+            self.T("• Evaluation: MOS-only, no prosody metrics",     font_size=26, color=TEXT_COLOR),
+            self.T("• No automatic validation step",                 font_size=26, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.18)
+
+        # UNE COLONNE : on empile les 4 catégories verticalement
+        grid_single = VGroup(cat1, cat2, cat3, cat4).arrange(DOWN, buff=0.30, aligned_edge=LEFT)
+        slide2 = VGroup(heading2, grid_single).arrange(DOWN, aligned_edge=LEFT, buff=0.42)
+
+        # Placement sous le titre, à gauche
+        slide2.next_to(title, DOWN, buff=0.8).to_edge(LEFT, buff=1.2)
+
+        # --- Auto-scale pour garantir "jamais hors cadre" ---
+        margin_w = 0.7   # marge latérale
+        margin_h = 0.9   # marge sous le titre
+        max_w = config.frame_width  - 2*margin_w
+        max_h = config.frame_height - (title.height + margin_h) - 0.4
+
+        scale_factor = min(max_w / slide2.width, max_h / slide2.height, 1.0)
+        if scale_factor < 1.0:
+            slide2.scale(scale_factor)
+
+        # reposition après scale
+        slide2.next_to(title, DOWN, buff=0.8).to_edge(LEFT, buff=margin_w)
+
+        # Arrivée slide 2
+        self.play(FadeIn(heading2, shift=UP*0.12), run_time=self.T_IN_S2)
+        self.play(
+            LaggedStart(
+                FadeIn(cat1, shift=UP*0.08),
+                FadeIn(cat2, shift=UP*0.08),
+                FadeIn(cat3, shift=UP*0.08),
+                FadeIn(cat4, shift=UP*0.08),
+                lag_ratio=0.18
+            ),
+            run_time=self.T_LIST
+        )
+        self.wait(self.T_DWELL_2)
+
+        # Référence (coin bas droit)
+        citation = self.T("Ref: ICNLSP 2025 (pp. 1–2)", font_size=18, color=HI_GREY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=0.5)
+        self.wait(0.8)
+
+        # Sortie propre
+        self.play(FadeOut(citation), FadeOut(slide2), run_time=self.T_OUT)
+        self.play(FadeOut(title), run_time=self.T_OUT*0.9)
+        self.wait(0.7)
 
 
 # ============================================================================
