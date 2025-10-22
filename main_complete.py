@@ -544,48 +544,150 @@ class SceneProsodyPrimer(Scene):
 # ============================================================================
 # SCENE 2A: TTS Expressivity Problem (~35s)
 # ============================================================================
+# --- Helper PATCHÉ : même police pour le titre souligné ---
+FONT_SANS = "DejaVu Sans"
+
+def under_title(txt: str, color=ACCENT_BLUE, font_size=46, font: str = FONT_SANS):
+    t = Text(txt, font=font, weight=BOLD, font_size=font_size, color=color)
+    underline = Line(
+        t.get_bottom() + DOWN*0.06 + LEFT*0.1,
+        t.get_bottom() + DOWN*0.06 + RIGHT*0.1,
+        stroke_width=3
+    ).set_color(color)
+    return VGroup(t, underline).arrange(DOWN, buff=0.08)
+
+
 class SceneProblemTTS(Scene):
+    # Timings
+    T_IN_TITLE   = 1.0
+    T_IN_BLOCK   = 0.9
+    T_LIST       = 2.0
+    T_DWELL_1    = 1.2
+    T_TRANSITION = 0.7
+    T_IN_S2      = 0.8
+    T_DWELL_2    = 1.2
+    T_OUT        = 0.8
+
+    FONT_SANS = FONT_SANS  # "DejaVu Sans"
+
+    def T(self, s, **kw):
+        """Wrapper Text : force la même police partout."""
+        kw.setdefault("font", self.FONT_SANS)
+        return Text(s, **kw)
+
     def construct(self):
-        title = Text("The TTS Expressivity Problem", font_size=48, color=ACCENT_BLUE, weight=BOLD)
-        title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=1.4); self.wait(0.4)
+        # --- Titre (persiste sur les 2 slides) : même police via helper patché
+        title = under_title("The TTS Expressivity Problem",
+                            color=ACCENT_BLUE, font_size=46, font=self.FONT_SANS)
+        title.to_edge(UP, buff=0.55)
+        self.play(FadeIn(title, shift=DOWN*0.2), run_time=self.T_IN_TITLE)
+        self.wait(0.15)
 
-        # Bloc central avec fond pour éviter l'effet d'écrasement
-        heading = Text("Current State", font_size=34, color=ACCENT_YELLOW, weight=BOLD)
+        # --- Baromètre (même police pour les labels)
+        lbl_intel = self.T("Intelligibility", font_size=22, color=HI_GREY)
+        lbl_expr  = self.T("Expressivity",  font_size=22, color=HI_GREY)
+        bar_w = 4.8
 
-        bullets = VGroup(
-            Text("✗ Commercial TTS prioritizes clarity", font_size=26, color=TEXT_COLOR),
-            Text("✗ Prosodic variation is limited",      font_size=26, color=TEXT_COLOR),
-            Text("✗ Results in monotone speech output",  font_size=26, color=TEXT_COLOR),
-            Text("✗ Particularly affects French prosody",font_size=26, color=TEXT_COLOR),
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.28)
+        bar_i_bg = Line(ORIGIN, RIGHT*bar_w, stroke_width=8).set_color(HI_GREY).set_opacity(0.25)
+        bar_i_fg = Line(ORIGIN, RIGHT*(bar_w*0.86), stroke_width=10).set_color(ACCENT_YELLOW)
+        g_i = VGroup(lbl_intel, VGroup(bar_i_bg, bar_i_fg).arrange(DOWN, buff=0.12)).arrange(DOWN, buff=0.16)
 
-        content = VGroup(heading, bullets).arrange(DOWN, aligned_edge=LEFT, buff=0.45)
+        bar_e_bg = Line(ORIGIN, RIGHT*bar_w, stroke_width=8).set_color(HI_GREY).set_opacity(0.25)
+        bar_e_fg = Line(ORIGIN, RIGHT*(bar_w*0.28), stroke_width=10).set_color(ACCENT_PURPLE)
+        g_e = VGroup(lbl_expr, VGroup(bar_e_bg, bar_e_fg).arrange(DOWN, buff=0.12)).arrange(DOWN, buff=0.16)
 
-        panel = RoundedRectangle(corner_radius=0.25, width=10.8, height=4.6, stroke_width=2, stroke_color=ACCENT_BLUE)
-        panel.set_fill(BG_COLOR, opacity=0.0)
-        # on met un léger padding visuel en centrant le groupe dans le panel
-        content.move_to(panel.get_center())
+        meter = VGroup(g_i, g_e).arrange(DOWN, buff=0.5).to_edge(LEFT, buff=0.8).shift(DOWN*0.2)
+        self.play(FadeIn(meter, shift=UP*0.1), run_time=self.T_IN_BLOCK)
 
-        card = Group(panel, content).next_to(title, DOWN, buff=0.6)
+        # ========== SLIDE 1 ==========
+        heading = self.T("Current State", font_size=32, color=ACCENT_YELLOW, weight=BOLD)
+        bullet_items = [
+            "• Commercial TTS prioritizes clarity",
+            "• Prosodic variation is limited",
+            "• Leads to monotonous speech",
+            "• French prosody particularly affected",
+        ]
+        bullets = VGroup(*[
+            self.T(item, font_size=26, color=TEXT_COLOR)
+            for item in bullet_items
+        ]).arrange(DOWN, aligned_edge=LEFT, buff=0.26)
+        col_state = VGroup(heading, bullets).arrange(DOWN, aligned_edge=LEFT, buff=0.42)
 
-        # Animations
-        self.play(Create(panel), run_time=0.8)
-        self.play(FadeIn(heading, shift=UP), run_time=0.6)
-        self.play(LaggedStart(*[FadeIn(b, shift=UP) for b in bullets], lag_ratio=0.22), run_time=2.4)
-        self.wait(2.0)
+        heading2 = self.T("Consequences", font_size=32, color=ACCENT_CYAN, weight=BOLD)
+        cons_items = [
+            "↓ Engagement & naturalness",
+            "↓ Perceived speaker intent",
+            "↑ Listening fatigue",
+        ]
+        cons = VGroup(*[
+            self.T(s, font_size=24, color=TEXT_COLOR) for s in cons_items
+        ]).arrange(DOWN, aligned_edge=LEFT, buff=0.22)
+        col_cons = VGroup(heading2, cons).arrange(DOWN, aligned_edge=LEFT, buff=0.35)
 
-        # petit focus sur deux points clés (remplit le temps sans “blanc”)
-        self.play(Indicate(bullets[1], scale_factor=1.05), run_time=0.7); self.wait(0.3)
-        self.play(Indicate(bullets[2], scale_factor=1.05), run_time=0.7); self.wait(0.6)
+        col_state.next_to(meter, RIGHT, buff=1.2).align_to(meter, UP)
+        sep = Line(ORIGIN, DOWN*3.8, stroke_width=2).set_color(HI_GREY).set_opacity(0.20)
+        sep.next_to(col_state, RIGHT, buff=0.7).align_to(col_state, UP)
+        col_cons.next_to(sep, RIGHT, buff=0.7).align_to(col_state, UP)
 
-        citation = Text("Données : ICNLSP 2025, p. 1–2", font_size=18, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC).to_corner(DR)
-        self.play(FadeIn(citation), run_time=0.5); self.wait(1.0)
+        slide1 = VGroup(col_state, sep, col_cons)
 
-        # sortie propre
-        self.play(FadeOut(citation, run_time=0.4))
-        self.play(FadeOut(card, shift=DOWN, run_time=0.8), FadeOut(title, run_time=0.8))
+        self.play(
+            FadeIn(col_state, shift=UP*0.12),
+            FadeIn(sep,       shift=UP*0.05),
+            FadeIn(col_cons,  shift=UP*0.12),
+            run_time=self.T_IN_BLOCK
+        )
+        self.play(LaggedStart(*[FadeIn(b, shift=UP*0.08) for b in bullets], lag_ratio=0.22), run_time=self.T_LIST)
+        self.play(LaggedStart(*[FadeIn(c, shift=UP*0.08) for c in cons],    lag_ratio=0.22), run_time=self.T_LIST*0.7)
+        self.wait(self.T_DWELL_1)
+
+        # ========== TRANSITION ==========
+        self.play(FadeOut(slide1), run_time=self.T_TRANSITION)
+
+        # ========== SLIDE 2 : Why French? ==========
+        why = self.T("Why French?", font_size=30, color=ACCENT_BLUE, weight=BOLD)
+        why_u = Line(
+            why.get_bottom()+DOWN*0.06+LEFT*0.1,
+            why.get_bottom()+DOWN*0.06+RIGHT*0.1,
+            stroke_width=3
+        ).set_color(ACCENT_BLUE)
+
+        # Bloc multi-lignes : même police
+        why_items = ["• Dense liaison & schwa deletion",
+        "• Rich boundary tones",
+        "• Subtle phrase-final lengthening",
+        "• Low prosodic control → flatter contours",
+        "• Misplaced pauses",]
+
+        why_bullets = VGroup(*[self.T(s, font_size=26, color=TEXT_COLOR) for s in why_items]).arrange(DOWN, aligned_edge=LEFT, buff=0.26)
+
+
+        why_blk = VGroup(
+            VGroup(why, why_u).arrange(DOWN, buff=0.06),
+            why_bullets
+            ).arrange(DOWN, aligned_edge=LEFT, buff=0.42)
+
+        why_blk.next_to(meter, RIGHT, buff=1.2).align_to(meter, UP)
+        self.play(FadeIn(why_blk, shift=UP*0.12), run_time=self.T_IN_S2)
+        self.wait(self.T_DWELL_2)
+
+
+
+        citation = self.T("Ref: ICNLSP 2025 (pp. 1–2)", font_size=18, color=HI_GREY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=0.5)
         self.wait(0.6)
+
+        # Sortie propre
+        self.play(
+            FadeOut(citation),
+            FadeOut(why_blk),
+            FadeOut(meter),
+            run_time=self.T_OUT
+        )
+        self.play(FadeOut(title), run_time=self.T_OUT*0.9)
+        self.wait(0.3)
+
+
 
 # ============================================================================
 # SCENE 2B: SSML Challenges (~40s)
