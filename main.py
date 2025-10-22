@@ -31,35 +31,48 @@ config.background_color = BG_COLOR
 # ============================================================================
 class SceneIntro(Scene):
     def construct(self):
+        # 1) Titre robuste (police + outline + fond + z-index + clamp)
         title = Text(
             "Improving French Synthetic Speech Quality\nvia SSML Prosody Control",
-            font_size=44, color=ACCENT_BLUE, weight=BOLD
-        ).to_edge(UP, buff=1.1)
+            font_size=44,
+            color=ACCENT_BLUE,
+            font="DejaVu Sans",   # ou "Noto Sans" si dispo sur ta machine
+            weight=BOLD
+        )
+        # largeur sûre + positionnement
+        title.scale_to_fit_width(min(config.frame_width * 0.9, title.width))
+        title.to_edge(UP, buff=0.55)
+        # garde-fou anti-clipping vertical (quel que soit le ratio)
+        title.set_y(min(title.get_y(), config.frame_height/2 - 0.7))
+        # lisibilité (contour + fond léger)
+        title.set_stroke(BLACK, width=2.2, opacity=0.75)
+        title.add_background_rectangle(color=BLACK, opacity=0.18, buff=0.12)
+        title.set_z_index(10)
 
         authors = Text(
             "Nassima Ould Ouali, Awais Hussain Sani, Ruben Bueno,\n"
             "Jonah Dauvet, Tim Luka Horstmann, Eric Moulines",
-            font_size=26, color=TEXT_COLOR
-        ).next_to(title, DOWN, buff=0.7)
+            font_size=26, color=TEXT_COLOR, font="DejaVu Sans"
+        ).next_to(title, DOWN, buff=0.55).set_z_index(9)
 
         affiliations = Text(
             "École Polytechnique, Hi! PARIS Research Center, McGill University",
-            font_size=22, color=HI_GREY, slant=ITALIC
-        ).next_to(authors, DOWN, buff=0.5)
+            font_size=22, color=HI_GREY, slant=ITALIC, font="DejaVu Sans"
+        ).next_to(authors, DOWN, buff=0.4).set_z_index(9)
 
-        conference = Text("ICNLSP 2025", font_size=28, color=ACCENT_BLUE, weight=BOLD)\
-            .next_to(affiliations, DOWN, buff=0.8)
+        conference = Text(
+            "ICNLSP 2025", font_size=28, color=ACCENT_BLUE, weight=BOLD, font="DejaVu Sans"
+        ).next_to(affiliations, DOWN, buff=0.6).set_z_index(9)
 
-        self.play(Write(title), run_time=1.4); self.wait(0.5)
-        self.play(FadeIn(authors, shift=UP), run_time=0.8)
-        self.play(FadeIn(affiliations, shift=UP), run_time=0.7)
-        self.play(Write(conference), run_time=0.8)
-        self.wait(2.0)
-        # petite respiration + sortie douce
-        self.play(Flash(title, flash_radius=0.28), run_time=0.7); self.wait(0.5)
-        self.play(*map(FadeOut, [conference, affiliations, authors]), run_time=1.0)
-        self.wait(0.4)
+        self.play(Write(title), run_time=1.2); self.wait(0.4)
+        self.play(FadeIn(authors, shift=UP), run_time=0.6)
+        self.play(FadeIn(affiliations, shift=UP), run_time=0.6)
+        self.play(Write(conference), run_time=0.6)
+        self.wait(1.2)
 
+        self.play(Flash(title, flash_radius=0.28), run_time=0.6); self.wait(0.25)
+        self.play(FadeOut(conference), FadeOut(affiliations), FadeOut(authors), run_time=0.6)
+        self.play(FadeOut(title), run_time=0.5) 
 
 
 # ============================================================================
@@ -89,7 +102,7 @@ class SceneBasics(Scene):
             font_size=22, color=TEXT_COLOR, line_spacing=1
         ).next_to(wf, DOWN, buff=0.4)
 
-        wf_cite = Text("Databootcamp (slide 9)", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
+        wf_cite = Text("Databootcamp TTS Course", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
 
         self.play(FadeIn(wf, shift=UP), run_time=1)
         self.play(FadeIn(wf_desc), FadeIn(wf_cite), run_time=0.7)
@@ -108,7 +121,7 @@ class SceneBasics(Scene):
         sp.shift(DOWN * 0.2)
 
         sp_desc = Text("Window 20–30 ms • Hop ≈10 ms • Hann + FFT", font_size=22, color=TEXT_COLOR).next_to(sp, DOWN, buff=0.35)
-        sp_cite = Text("Databootcamp", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
+        sp_cite = Text("Databootcamp TTS Course", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
 
         self.play(FadeIn(sp, shift=UP), run_time=1.0)
         self.play(FadeIn(sp_desc), FadeIn(sp_cite), run_time=0.6)
@@ -132,7 +145,7 @@ class SceneBasics(Scene):
             Text("Typical extraction: pyworld, Praat, post-processing outliers", font_size=22, color=GRAY, slant=ITALIC)
         ).arrange(DOWN, buff=0.2).next_to(f0img, DOWN, buff=0.45)
 
-        pitch_cite = Text("Databootcamp", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
+        pitch_cite = Text("Databootcamp TTS Course", font_size=16, color=GRAY, slant=ITALIC).to_corner(DR)
 
         self.play(FadeIn(f0img, shift=UP), run_time=1.0)
         self.play(FadeIn(pitch_desc), FadeIn(pitch_cite), run_time=0.6)
