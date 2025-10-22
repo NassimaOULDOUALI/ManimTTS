@@ -11,6 +11,77 @@ def load_img(stem: str, exts=(".png", ".jpg", ".jpeg", ".gif", ".ico")) -> Image
             return ImageMobject(str(p))
     raise FileNotFoundError(f"Image introuvable pour '{stem}' dans assets/ ({exts})")
 
+
+
+def overlay_pitch_curve(width=6.5, height=2.4, color="#14B8FF"):
+    """
+    Courbe F0 stylisée (montées/descentes). Pas d’axes.
+    """
+    xs = np.linspace(-width/2, width/2, 320)
+    # profil F0 synthétique lissé (en demi-tons arbitraires)
+    base = 0.0
+    contour = (0.6*np.sin(1.2*xs) + 0.3*np.sin(2.7*xs+0.6)
+               + 0.15*np.sin(4.6*xs+1.4)) * 0.8 + base
+    ys = np.clip(contour, -height/2+0.1, height/2-0.1)
+    path = VMobject(stroke_width=3).set_color(color).set_opacity(0.85)
+    path.set_points_smoothly([np.array([x, y, 0]) for x, y in zip(xs, ys)])
+    # ligne de référence (pitch baseline) très légère
+    ref = Line(LEFT*width/2, RIGHT*width/2, stroke_width=2).set_color(color).set_opacity(0.20)
+    grp = VGroup(ref, path)
+    return grp
+
+def overlay_volume_envelope(width=6.5, height=2.4, color="#E5007D"):
+    """
+    Enveloppe d’amplitude (aire remplie) + ligne de crête. Loudness ~ énergie.
+    """
+    xs = np.linspace(-width/2, width/2, 240)
+    env = 0.6 + 0.35*np.sin(0.9*xs+0.7) * np.sin(0.35*xs-0.3)
+    env = np.clip(env, 0.05, 1.0)
+    ys = (env - 0.5) * (height*0.9)  # centre vertical
+    # aire (polygone)
+    pts = [np.array([xs[i], ys[i], 0]) for i in range(len(xs))]
+    poly = Polygon(
+        *([*pts, np.array([xs[-1], 0, 0]), np.array([xs[0], 0, 0])]),
+        stroke_width=0
+    ).set_fill(color=color, opacity=0.18)
+    crest = VMobject(stroke_width=3).set_color(color).set_opacity(0.85)
+    crest.set_points_smoothly(pts)
+    mid = Line(LEFT*width/2, RIGHT*width/2, stroke_width=2).set_color(color).set_opacity(0.15)
+    return VGroup(poly, crest, mid)
+
+def overlay_rate_markers(width=6.5, height=2.4, color="#5A1E86", syll_per_sec=4.0):
+    """
+    Marqueurs de syllabes (ticks) régulièrement espacés = tempo.
+    Augmente/diminue syll_per_sec pour accélérer/ralentir visuellement.
+    """
+    dur = 6.0  # secondes arbitraires pour mapping horizontal
+    n = int(dur * syll_per_sec)
+    left, right = -width/2, width/2
+    xs = np.linspace(left+0.3, right-0.3, n)
+    baseline = Line(LEFT*width/2, RIGHT*width/2, stroke_width=2).set_color(color).set_opacity(0.25)
+    ticks = VGroup()
+    for x in xs:
+        t = Line(np.array([x, -0.55*height/2, 0]), np.array([x, 0.55*height/2, 0]), stroke_width=2)
+        t.set_color(color).set_opacity(0.55)
+        ticks.add(t)
+    # un ruban subtil pour le “flow”
+    ribbon = Line(LEFT*width/2, RIGHT*width/2, stroke_width=6).set_color(color).set_opacity(0.08)
+    return VGroup(ribbon, baseline, ticks)
+
+def overlay_breaks_bands(width=6.5, height=2.4, color="#1363DF", break_positions=( -2.3, 0.0, 2.1 ), band_width=0.55):
+    """
+    Bandes verticales translucides = pauses. positions en coordonnées écran (x).
+    """
+    bands = VGroup()
+    for x in break_positions:
+        rect = Rectangle(width=band_width, height=height, stroke_width=0)
+        rect.set_fill(color=color, opacity=0.20)
+        rect.move_to(np.array([x, 0, 0]))
+        bands.add(rect)
+    baseline = Line(LEFT*width/2, RIGHT*width/2, stroke_width=2).set_color(color).set_opacity(0.18)
+    return VGroup(baseline, bands)
+
+
 config.text_backend = "pango"
 
 BG_COLOR      = "#0B1026"  
@@ -329,11 +400,10 @@ PARAMS = [
 # -------------------------------------------------------------------
 class SceneProsodyPrimer(Scene):
     def construct(self):
-        # --- Fond subtil
+        # --- Première page : habillage visible ---
         bg = subtle_background()
         self.add(bg)
 
-        # --- En-tête
         title = under_title("Prosody Control Parameters", color=ACCENT_BLUE, font_size=44)
         title.to_edge(UP, buff=0.6)
         subtitle = Text(
@@ -344,7 +414,7 @@ class SceneProsodyPrimer(Scene):
         self.play(FadeIn(title, shift=DOWN*0.2), FadeIn(subtitle, shift=DOWN*0.2), run_time=0.8)
         self.wait(0.2)
 
-        # --- Chemin fluide + curseur (mouvement ambiant)
+        # Chemin fluide + curseur (mouvement ambiant)
         path = flowing_path()
         cursor, cursor_anim = moving_cursor_along(path, color=TEXT_COLOR)
         path.shift(DOWN*0.8)
@@ -353,7 +423,7 @@ class SceneProsodyPrimer(Scene):
         self.play(cursor_anim, run_time=4.2)
         self.wait(0.1)
 
-        # --- Légende
+        # Légende
         legend = tiny_legend([
             ("Pitch", ACCENT_CYAN),
             ("Loudness", ACCENT_YELLOW),
@@ -362,8 +432,18 @@ class SceneProsodyPrimer(Scene):
         ])
         legend.to_edge(DOWN, buff=0.4)
         self.play(FadeIn(legend, shift=UP*0.2), run_time=0.5)
+        self.wait(0.4)
 
-        # --- “Slides” paramétriques (sans rectangles)
+        # --- Effacer l'habillage pour les slides suivants (on garde titre + sous-titre) ---
+        self.play(
+            FadeOut(legend),
+            FadeOut(path),
+            FadeOut(cursor),
+            FadeOut(bg),
+            run_time=0.6
+        )
+
+        # --- Slides paramétriques : contenu pur (pas de SSML, pas d'habillage) ---
         slides = []
         for p in PARAMS:
             # Tag (pastille + tiret + label)
@@ -382,33 +462,22 @@ class SceneProsodyPrimer(Scene):
             impact_txt = Text(p["impact"], font="DejaVu Sans", font_size=22, color=TEXT_COLOR)
             row_imp = VGroup(impact, impact_txt).arrange(RIGHT, buff=0.2, aligned_edge=UP)
 
-            # SSML “sur ligne”
-            ssml = ssml_line(p["ssml"])
-
-            # Mise en page :
-            #   Colonne gauche : tag + What/Controls/Impact
-            #   Colonne droite : SSML + motif graphique associé
+            # Colonne gauche uniquement (pas de colonne droite)
             left_col = VGroup(tag, row_what, row_ctrl, row_imp).arrange(DOWN, buff=0.24, aligned_edge=LEFT)
-            left_col.to_edge(LEFT, buff=1.1).shift(DOWN*0.3)
+            # Centré horizontalement pour un rendu propre quand il n'y a qu'une colonne
+            left_col.to_edge(LEFT, buff=1.2).shift(DOWN*0.3)
 
-            right_col = VGroup(ssml).arrange(DOWN, buff=0.3, aligned_edge=LEFT)
-            right_col.to_edge(RIGHT, buff=1.0).shift(DOWN*0.2)
-
-            # Motif graphique : courbe dédiée au paramètre (couleur propre)
-            motif = path.copy().set_color(p["color"]).set_opacity(0.18)
-            motif.scale(0.9).shift(UP*0.3 + RIGHT*0.2)
-            right_col.add(motif)
-
-            slide = VGroup(left_col, right_col)
-            slide.set_opacity(0)  # masqué avant animation
+            # Slide = seulement la colonne gauche
+            slide = VGroup(left_col)
+            slide.set_opacity(0)
             slides.append(slide)
 
-        # Affichage séquentiel des “slides”
+        # --- Affichage séquentiel des slides (contenu pur) ---
         for i, slide in enumerate(slides):
             self.add(slide)
             self.play(slide.animate.set_opacity(1), run_time=0.5)
 
-            # Accent léger : souligner le tag puis faire “respirer”
+            # Accent léger : souligner le tag puis “respirer”
             tag_label = slide[0][0]  # chip(...)
             accent = Line(
                 tag_label.get_bottom()+DOWN*0.12+LEFT*0.1,
@@ -419,21 +488,15 @@ class SceneProsodyPrimer(Scene):
             self.wait(0.25)
             self.play(FadeOut(accent), run_time=0.2)
 
-            # Mise en évidence du SSML en glissant un petit “cursor” dessus
-            ssml_group = slides[i][1][0]  # (base line, code)
-            base_line = ssml_group[0]
-            marker = Triangle(stroke_width=0, fill_opacity=1.0).set_color(PARAMS[i]["color"]).scale(0.08)
-            marker.move_to(base_line.get_left()).shift(UP*0.12)
-            self.add(marker)
-            self.play(marker.animate.move_to(base_line.get_right()+UP*0.12), run_time=0.8)
-            self.play(FadeOut(marker), run_time=0.2)
+            # (Plus d’exemple SSML ni de marker ici)
+            self.wait(0.3)
 
             # Transition vers le slide suivant
             if i < len(slides) - 1:
                 self.play(slide.animate.set_opacity(0), run_time=0.35)
                 self.remove(slide)
 
-        # --- Conclusion compacte (pipeline)
+        # --- Conclusion compacte (pipeline) ---
         pipeline_title = Text(
             "Prosody Control Pipeline",
             font="DejaVu Sans", font_size=26, color=ACCENT_BLUE, weight=BOLD
@@ -447,14 +510,24 @@ class SceneProsodyPrimer(Scene):
         connector = Line(LEFT*5.2, RIGHT*5.2, stroke_width=2).set_color(HI_GREY).set_opacity(0.25)
         connector.next_to(steps, UP, buff=0.35)
 
-        self.play(FadeIn(connector, shift=UP*0.2), FadeIn(steps, shift=UP*0.2), FadeIn(pipeline_title, shift=UP*0.2), run_time=0.6)
+        self.play(
+            FadeIn(connector, shift=UP*0.2),
+            FadeIn(steps, shift=UP*0.2),
+            FadeIn(pipeline_title, shift=UP*0.2),
+            run_time=0.6
+        )
         self.wait(0.8)
 
         # Sortie propre
         self.play(
-            *[FadeOut(m) for m in [steps, pipeline_title, legend, path, cursor, title, subtitle, bg, connector]],
+            FadeOut(steps),
+            FadeOut(pipeline_title),
+            FadeOut(connector),
+            FadeOut(title),
+            FadeOut(subtitle),
             run_time=0.7
         )
+
 
 # ============================================================================
 # SCENE 2A: TTS Expressivity Problem (~35s)
