@@ -1006,288 +1006,405 @@ class ScenePipelineFigure(Scene):
 
 
 # ============================================================================
-# SCENE 4: Stage 1 - Break Insertion (60s)
-# ============================================================================
+from manim import *
+
 class SceneStage1(Scene):
     """
     Scene 4: Stage 1 - Break insertion
-    Duration: 60 seconds
+    Target duration: 60 s
     """
+    FONT_SANS = "DejaVu Sans"
+
+    # Timings (lisibles et faciles à ajuster)
+    T_TITLE_IN      = 2.0
+    T_TITLE_HOLD    = 0.8
+    T_MODEL_LAG     = 4.0
+    T_MODEL_HOLD    = 1.2
+    T_PERF_LAG      = 4.0
+    T_PERF_HOLD     = 1.2
+    T_CIT_IN        = 0.6
+    T_CIT_HOLD      = 1.4
+    T_OUT           = 2.0
+    TARGET_SECONDS  = 60.0
+
+    def T(self, s, **kw):
+        kw.setdefault("font", self.FONT_SANS)
+        return Text(s, **kw)
+
     def construct(self):
         # Title
-        title = Text("Stage 1: Break Prediction (QwenA)", font_size=48, color=ACCENT_BLUE, weight=BOLD)
+        title = self.T("Stage 1: Break Prediction (QwenA)", font_size=48, color=ACCENT_BLUE, weight=BOLD)
         title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=2)
-        self.wait(2)
-        
-        # Model info with lagged
+        self.play(Write(title), run_time=self.T_TITLE_IN)
+        self.wait(self.T_TITLE_HOLD)
+
+        # Model info
         model_info = VGroup(
-            Text("Model: Qwen 2.5-7B", font_size=28, color=ACCENT_YELLOW, weight=BOLD),
-            Text("Fine-tuning: QLoRA (4-bit, rank 8, α=16)", font_size=24, color=TEXT_COLOR),
-            Text("Input: Up to 200-word French paragraphs", font_size=24, color=TEXT_COLOR),
-            Text("Output: <break> tag placement", font_size=24, color=TEXT_COLOR)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(title, DOWN, buff=0.5)
-        
-        self.play(LaggedStart(*[FadeIn(m, shift=DOWN) for m in model_info], lag_ratio=0.2), run_time=4)
-        self.wait(3)
-        
+            self.T("Model: Qwen 2.5-7B",                          font_size=28, color=ACCENT_YELLOW, weight=BOLD),
+            self.T("Fine-tuning: QLoRA (4-bit, rank 8, α=16)",     font_size=24, color=TEXT_COLOR),
+            self.T("Input: up to 200-word French paragraphs",      font_size=24, color=TEXT_COLOR),
+            self.T("Output: <break> tag placement",                font_size=24, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.30).next_to(title, DOWN, buff=0.55)
+
+        self.play(LaggedStart(*[FadeIn(m, shift=DOWN*0.15) for m in model_info], lag_ratio=0.20), run_time=self.T_MODEL_LAG)
+        self.wait(self.T_MODEL_HOLD)
+
         # Performance metrics
         perf_box = VGroup(
-            Text("Performance:", font_size=32, color=ACCENT_BLUE, weight=BOLD),
-            Text("F₁ Score: 99.24%", font_size=30, color=ACCENT_YELLOW, weight=BOLD),
-            Text("Perplexity: 1.001", font_size=30, color=ACCENT_YELLOW, weight=BOLD),
-            Text("vs. BERT baseline: 92.06% F₁", font_size=24, color=GRAY)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).to_edge(DOWN, buff=1.5)
-        
-        self.play(LaggedStart(*[FadeIn(p, shift=UP) for p in perf_box], lag_ratio=0.2), run_time=4)
-        self.wait(3)
-        
+            self.T("Performance:",              font_size=32, color=ACCENT_BLUE,   weight=BOLD),
+            self.T("F₁ score: 99.24%",          font_size=30, color=ACCENT_YELLOW, weight=BOLD),
+            self.T("Perplexity: 1.001",         font_size=30, color=ACCENT_YELLOW, weight=BOLD),
+            self.T("vs. BERT baseline: 92.06% F₁", font_size=24, color=HI_GREY),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.28)
+        perf_box.to_edge(DOWN, buff=1.1).to_edge(LEFT, buff=1.2)
+
+        self.play(LaggedStart(*[FadeIn(p, shift=UP*0.10) for p in perf_box], lag_ratio=0.20), run_time=self.T_PERF_LAG)
+        self.wait(self.T_PERF_HOLD)
+
         # Citation
-        citation = Text(
-            "Données : ICNLSP 2025, p. 7 (Table 4)",
-            font_size=18,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        self.play(FadeIn(citation), run_time=1)
-        self.wait(2)
-        
-        # Clear
+        citation = self.T("Données : ICNLSP 2025, p. 7 (Table 4)", font_size=18, color=HI_GREY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=self.T_CIT_IN)
+        self.wait(self.T_CIT_HOLD)
+
+        # Sortie
         self.play(
-            FadeOut(title),
-            FadeOut(model_info),
-            FadeOut(perf_box),
             FadeOut(citation),
-            run_time=2
+            FadeOut(perf_box),
+            FadeOut(model_info),
+            FadeOut(title),
+            run_time=self.T_OUT
         )
-        self.wait(35)
+
+        # --- Padding automatique pour atteindre exactement 60s ---
+        spent = (
+            self.T_TITLE_IN + self.T_TITLE_HOLD +
+            self.T_MODEL_LAG + self.T_MODEL_HOLD +
+            self.T_PERF_LAG  + self.T_PERF_HOLD +
+            self.T_CIT_IN    + self.T_CIT_HOLD +
+            self.T_OUT
+        )
+        pad = max(0.0, self.TARGET_SECONDS - spent)
+        self.wait(pad)
 
 
-# ============================================================================
-# SCENE 5: Stage 2 - Prosody Values (60s)
-# ============================================================================
 class SceneStage2(Scene):
     """
     Scene 5: Stage 2 - Prosody values
-    Duration: 60 seconds
+    Target duration: 60 s
     """
+    FONT_SANS = "DejaVu Sans"
+
+    # Timings
+    T_TITLE_IN      = 2.0
+    T_TITLE_HOLD    = 0.8
+    T_MODEL_LAG     = 4.0
+    T_MODEL_HOLD    = 1.2
+    T_FEAT_TITLE_IN = 1.2
+    T_FEAT_LAG      = 4.0
+    T_FEAT_HOLD     = 1.2
+    T_CIT_IN        = 0.6
+    T_CIT_HOLD      = 1.4
+    T_OUT           = 2.0
+    TARGET_SECONDS  = 60.0
+
+    def T(self, s, **kw):
+        kw.setdefault("font", self.FONT_SANS)
+        return Text(s, **kw)
+
     def construct(self):
         # Title
-        title = Text("Stage 2: Prosody Prediction (QwenB)", font_size=48, color=ACCENT_BLUE, weight=BOLD)
+        title = self.T("Stage 2: Prosody Prediction (QwenB)", font_size=48, color=ACCENT_BLUE, weight=BOLD)
         title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=2)
-        self.wait(2)
-        
+        self.play(Write(title), run_time=self.T_TITLE_IN)
+        self.wait(self.T_TITLE_HOLD)
+
         # Model info
         model_info = VGroup(
-            Text("Model: Qwen 2.5-7B (2nd instance)", font_size=28, color=ACCENT_YELLOW, weight=BOLD),
-            Text("Fine-tuning: QLoRA adapter", font_size=24, color=TEXT_COLOR),
-            Text("Input: SSML skeleton from QwenA", font_size=24, color=TEXT_COLOR),
-            Text("Output: Numeric prosodic attributes", font_size=24, color=TEXT_COLOR)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(title, DOWN, buff=0.5)
-        
-        self.play(LaggedStart(*[FadeIn(m, shift=DOWN) for m in model_info], lag_ratio=0.2), run_time=4)
-        self.wait(3)
-        
-        # Prosodic features
-        features_title = Text("Prosodic Features:", font_size=28, color=ACCENT_YELLOW, weight=BOLD)
-        features_title.shift(UP * 0.2)
-        
-        features = VGroup(
-            Text("• Pitch: f₀ → semitone → % (±2% typical)", font_size=22, color=TEXT_COLOR),
-            Text("• Volume: LUFS → gain % (~-10% typical)", font_size=22, color=TEXT_COLOR),
-            Text("• Rate: words/sec → % (~-1% typical)", font_size=22, color=TEXT_COLOR),
-            Text("• Break: silence gap (250-500 ms)", font_size=22, color=TEXT_COLOR)
-        ).arrange(DOWN, buff=0.3, aligned_edge=LEFT).next_to(features_title, DOWN, buff=0.4)
-        
-        self.play(Write(features_title), run_time=1.5)
-        self.wait(1)
-        self.play(LaggedStart(*[FadeIn(f, shift=RIGHT) for f in features], lag_ratio=0.3), run_time=4)
-        self.wait(3)
-        
-        # Citation
-        citation = Text(
-            "Données : ICNLSP 2025, p. 4-5",
-            font_size=18,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        self.play(FadeIn(citation), run_time=1)
-        self.wait(2)
-        
-        # Clear
-        self.play(
-            FadeOut(title),
-            FadeOut(model_info),
-            FadeOut(features_title),
-            FadeOut(features),
-            FadeOut(citation),
-            run_time=2
-        )
-        self.wait(34)
+            self.T("Model: Qwen 2.5-7B (second instance)", font_size=28, color=ACCENT_YELLOW, weight=BOLD),
+            self.T("Fine-tuning: QLoRA adapter",            font_size=24, color=TEXT_COLOR),
+            self.T("Input: SSML skeleton from QwenA",       font_size=24, color=TEXT_COLOR),
+            self.T("Output: numeric prosodic attributes",   font_size=24, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.30).next_to(title, DOWN, buff=0.55)
 
+        self.play(LaggedStart(*[FadeIn(m, shift=DOWN*0.15) for m in model_info], lag_ratio=0.20), run_time=self.T_MODEL_LAG)
+        self.wait(self.T_MODEL_HOLD)
+
+        # Prosodic features
+        features_title = self.T("Prosodic Features:", font_size=28, color=ACCENT_YELLOW, weight=BOLD)
+        features_title.next_to(model_info, DOWN, buff=0.6)
+
+        # (conserve ton wording, police homogène)
+        features = VGroup(
+            self.T("• Pitch: f₀ → semitone → % (±2% typical)",         font_size=24, color=TEXT_COLOR),
+            self.T("• Volume: LUFS → gain % (~−10% typical)",           font_size=24, color=TEXT_COLOR),
+            self.T("• Rate: words/sec → % (~−1% typical)",              font_size=24, color=TEXT_COLOR),
+            self.T("• Break: silence gap (250–500 ms)",                 font_size=24, color=TEXT_COLOR),
+        ).arrange(DOWN, buff=0.28, aligned_edge=LEFT).next_to(features_title, DOWN, buff=0.35)
+
+        self.play(FadeIn(features_title, shift=UP*0.10), run_time=self.T_FEAT_TITLE_IN)
+        self.play(LaggedStart(*[FadeIn(f, shift=RIGHT*0.10) for f in features], lag_ratio=0.30), run_time=self.T_FEAT_LAG)
+        self.wait(self.T_FEAT_HOLD)
+
+        # Citation
+        citation = self.T("Données : ICNLSP 2025, p. 4–5", font_size=18, color=HI_GREY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=self.T_CIT_IN)
+        self.wait(self.T_CIT_HOLD)
+
+        # Sortie
+        self.play(
+            FadeOut(citation),
+            FadeOut(features),
+            FadeOut(features_title),
+            FadeOut(model_info),
+            FadeOut(title),
+            run_time=self.T_OUT
+        )
+
+        # Padding automatique vers 60 s
+        spent = (
+            self.T_TITLE_IN + self.T_TITLE_HOLD +
+            self.T_MODEL_LAG + self.T_MODEL_HOLD +
+            self.T_FEAT_TITLE_IN + self.T_FEAT_LAG + self.T_FEAT_HOLD +
+            self.T_CIT_IN + self.T_CIT_HOLD +
+            self.T_OUT
+        )
+        pad = max(0.0, self.TARGET_SECONDS - spent)
+        self.wait(pad)
 
 # ============================================================================
 # SCENE 6: Objective Evaluation (75s)
 # ============================================================================
+from manim import *
+
 class SceneEvalObj(Scene):
     """
     Scene 6: Objective evaluation
-    Duration: 75 seconds
+    Target duration: 75 s
     """
+    FONT_SANS = "DejaVu Sans"
+
+    # Timings (ajuste si besoin, le padding recalculera pour 75 s)
+    T_TITLE_IN    = 2.0
+    T_TITLE_HOLD  = 0.8
+
+    T_F1_TITLE_IN = 1.5
+    T_F1_TITLE_H  = 1.0
+    T_F1_LIST_IN  = 3.0
+    T_F1_LIST_H   = 4.0
+    T_F1_OUT      = 1.0
+    T_F1_GAP      = 1.0
+
+    T_MAE_TITLE_IN= 1.5
+    T_MAE_TITLE_H = 1.0
+    T_MAE_LIST_IN = 4.0
+    T_MAE_LIST_H  = 4.0
+
+    T_KEY_IN      = 2.0
+    T_KEY_H       = 3.0
+
+    T_CIT_IN      = 1.0
+    T_CIT_H       = 2.0
+
+    T_OUT         = 2.0
+    TARGET        = 36.0
+
+    def T(self, s, **kw):
+        kw.setdefault("font", self.FONT_SANS)
+        return Text(s, **kw)
+
     def construct(self):
-        # Title
-        title = Text("Objective Evaluation", font_size=48, color=ACCENT_BLUE, weight=BOLD)
+        # --- Title
+        title = self.T("Objective Evaluation", font_size=48, color=ACCENT_BLUE, weight=BOLD)
         title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=2)
-        self.wait(2)
-        
-        # F1 scores
-        f1_title = Text("Break Prediction Accuracy", font_size=32, color=ACCENT_YELLOW)
-        f1_title.next_to(title, DOWN, buff=0.5)
-        
+        self.play(Write(title), run_time=self.T_TITLE_IN)
+        self.wait(self.T_TITLE_HOLD)
+
+        # ===== F1 block =====
+        f1_title = self.T("Break Prediction Accuracy", font_size=32, color=ACCENT_YELLOW)
+        f1_title.next_to(title, DOWN, buff=0.55)
+
         f1_results = VGroup(
-            Text("QwenA (Ours): 99.24% F₁", font_size=28, color=ACCENT_BLUE, weight=BOLD),
-            Text("BERT Baseline: 92.06% F₁", font_size=28, color=GRAY)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.4).shift(UP * 0.5)
-        
-        self.play(Write(f1_title), run_time=1.5)
-        self.wait(1)
-        self.play(LaggedStart(*[FadeIn(f, shift=DOWN) for f in f1_results], lag_ratio=0.3), run_time=3)
-        self.wait(4)
-        
-        # Fade out f1
-        self.play(
-            FadeOut(f1_title),
-            FadeOut(f1_results),
-            run_time=1
-        )
-        self.wait(1)
-        
-        # MAE comparison
-        mae_title = Text("Mean Absolute Error (MAE)", font_size=32, color=ACCENT_YELLOW)
-        mae_title.shift(DOWN * 0.5)
-        
+            self.T("• QwenA (ours): 99.24% F₁", font_size=28, color=ACCENT_BLUE,  weight=BOLD),
+            self.T("• BERT baseline: 92.06% F₁", font_size=28, color=HI_GREY),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.30).next_to(f1_title, DOWN, buff=0.35)
+
+        self.play(Write(f1_title), run_time=self.T_F1_TITLE_IN)
+        self.wait(self.T_F1_TITLE_H)
+        self.play(LaggedStart(*[FadeIn(f, shift=DOWN*0.1) for f in f1_results], lag_ratio=0.25),
+                  run_time=self.T_F1_LIST_IN)
+        self.wait(self.T_F1_LIST_H)
+
+        # separator fin
+        sep = Line(LEFT*5.6, RIGHT*5.6, stroke_width=2).set_color(HI_GREY).set_opacity(0.2)
+        sep.next_to(f1_results, DOWN, buff=0.6)
+        self.play(FadeIn(sep), run_time=0.4)
+        self.wait(0.2)
+
+        # fade out F1 block (garde le titre haut)
+        self.play(FadeOut(f1_title), FadeOut(f1_results), run_time=self.T_F1_OUT)
+        self.wait(self.T_F1_GAP)
+
+        # ===== MAE block =====
+        mae_title = self.T("\nMean Absolute Error (MAE)", font_size=32, color=ACCENT_YELLOW)
+        mae_title.next_to(sep, DOWN, buff=0.6)
+
         mae_results = VGroup(
-            Text("Pitch: 0.97% (QwenB) vs 1.68% (BiLSTM)", font_size=24, color=TEXT_COLOR),
-            Text("Volume: 1.09% (QwenB) vs 6.04% (BiLSTM)", font_size=24, color=TEXT_COLOR),
-            Text("Rate: 1.10% (QwenB) vs 0.84% (BiLSTM)", font_size=24, color=TEXT_COLOR)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(mae_title, DOWN, buff=0.4)
-        
-        self.play(Write(mae_title), run_time=1.5)
-        self.wait(1)
-        self.play(LaggedStart(*[FadeIn(m, shift=UP) for m in mae_results], lag_ratio=0.3), run_time=4)
-        self.wait(4)
-        
+            self.T("• Pitch: 0.97% (QwenB)  vs  1.68% (BiLSTM)", font_size=24, color=TEXT_COLOR),
+            self.T("• Volume: 1.09% (QwenB) vs  6.04% (BiLSTM)", font_size=24, color=TEXT_COLOR),
+            self.T("• Rate: 1.10% (QwenB)  vs  0.84% (BiLSTM)",  font_size=24, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.28).next_to(mae_title, DOWN, buff=0.35)
+
+        self.play(Write(mae_title), run_time=self.T_MAE_TITLE_IN)
+        self.wait(self.T_MAE_TITLE_H)
+        self.play(LaggedStart(*[FadeIn(m, shift=UP*0.1) for m in mae_results], lag_ratio=0.25),
+                  run_time=self.T_MAE_LIST_IN)
+        self.wait(self.T_MAE_LIST_H)
+
         # Key finding
-        key_finding = Text(
-            "25-40% MAE reduction vs. baselines",
-            font_size=28,
-            color=ACCENT_BLUE,
-            weight=BOLD
-        ).to_edge(DOWN, buff=1.5)
-        
-        self.play(FadeIn(key_finding), run_time=2)
-        self.wait(3)
-        
+        key = self.T("\n\n\n25–40% MAE reduction vs. baselines", font_size=28, color=ACCENT_BLUE, weight=BOLD)
+        key.to_edge(DOWN, buff=1.2)
+        self.play(FadeIn(key, shift=UP*0.1), run_time=self.T_KEY_IN)
+        self.wait(self.T_KEY_H)
+
         # Citation
-        citation = Text(
-            "Données : ICNLSP 2025, p. 7",
-            font_size=18,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        self.play(FadeIn(citation), run_time=1)
-        self.wait(2)
-        
-        # Clear
+        citation = self.T("Données : ICNLSP 2025, p. 7", font_size=18, color=HI_GREY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=self.T_CIT_IN)
+        self.wait(self.T_CIT_H)
+
+        # --- Sortie propre
         self.play(
-            FadeOut(title),
+            FadeOut(citation),
+            FadeOut(key),
             FadeOut(mae_title),
             FadeOut(mae_results),
-            FadeOut(key_finding),
-            FadeOut(citation),
-            run_time=2
+            FadeOut(sep),
+            FadeOut(title),
+            run_time=self.T_OUT
         )
-        self.wait(35)
 
+        # --- Padding auto pour atteindre 75 s ---
+        spent = (
+            self.T_TITLE_IN + self.T_TITLE_HOLD +
+            self.T_F1_TITLE_IN + self.T_F1_TITLE_H + self.T_F1_LIST_IN + self.T_F1_LIST_H +
+            0.4 + self.T_F1_OUT + self.T_F1_GAP +     # 0.4 pour l'apparition du séparateur
+            self.T_MAE_TITLE_IN + self.T_MAE_TITLE_H + self.T_MAE_LIST_IN + self.T_MAE_LIST_H +
+            self.T_KEY_IN + self.T_KEY_H +
+            self.T_CIT_IN + self.T_CIT_H +
+            self.T_OUT
+        )
+        pad = max(0.0, self.TARGET - spent)
+        self.wait(pad)
 
 # ============================================================================
 # SCENE 7: Subjective Evaluation (60s)
 # ============================================================================
+from manim import *
+
 class SceneEvalSubj(Scene):
     """
-    Scene 7: Subjective evaluation
-    Duration: 60 seconds
+    Scene 7: Subjective evaluation (AB Test)
+    Target duration: 60 s
     """
+    FONT_SANS = "DejaVu Sans"
+
+    # Timings (tu peux ajuster, le padding recalcule pour finir à 60.0 s)
+    T_TITLE_IN    = 2.0
+    T_TITLE_HOLD  = 0.8
+
+    T_DESIGN_IN   = 4.0
+    T_DESIGN_HOLD = 1.2
+    T_DESIGN_OUT  = 1.0
+    T_GAP         = 1.0
+
+    T_MOS_TITLE_IN= 1.5
+    T_MOS_TITLE_H = 1.0
+    T_MOS_LIST_IN = 4.0
+    T_MOS_LIST_H  = 3.0
+
+    T_PREF_IN     = 2.0
+    T_PREF_HOLD   = 3.0
+
+    T_CIT_IN      = 1.0
+    T_CIT_HOLD    = 2.0
+
+    T_OUT         = 2.0
+    TARGET        = 60.0
+
+    def T(self, s, **kw):
+        kw.setdefault("font", self.FONT_SANS)
+        return Text(s, **kw)
+
     def construct(self):
-        # Title
-        title = Text("Subjective Evaluation (AB Test)", font_size=48, color=ACCENT_BLUE, weight=BOLD)
+        # --- Title
+        title = self.T("Subjective Evaluation (AB Test)", font_size=48, color=ACCENT_BLUE, weight=BOLD)
         title.to_edge(UP, buff=0.5)
-        self.play(Write(title), run_time=2)
-        self.wait(2)
-        
-        # Study design
-        study_design = VGroup(
-            Text("Study Design:", font_size=28, color=ACCENT_YELLOW, weight=BOLD),
-            Text("• 18 participants", font_size=24, color=TEXT_COLOR),
-            Text("• 30 audio pairs (1 min each)", font_size=24, color=TEXT_COLOR),
-            Text("• Baseline vs. SSML-enhanced", font_size=24, color=TEXT_COLOR)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(title, DOWN, buff=0.5)
-        
-        self.play(LaggedStart(*[FadeIn(s, shift=DOWN) for s in study_design], lag_ratio=0.2), run_time=4)
-        self.wait(3)
-        
-        # Fade out study design
-        self.play(FadeOut(study_design), run_time=1)
-        self.wait(1)
-        
-        # MOS scores
-        mos_title = Text("Mean Opinion Score (MOS)", font_size=32, color=ACCENT_YELLOW)
-        mos_title.shift(UP * 0.3)
-        
-        mos_results = VGroup(
-            Text("Baseline: 3.20", font_size=28, color=GRAY),
-            Text("Enhanced: 3.87 (+0.67, +20%)", font_size=28, color=ACCENT_BLUE, weight=BOLD),
-            Text("p < 0.005 (statistically significant)", font_size=24, color=ACCENT_YELLOW, slant=ITALIC)
-        ).arrange(DOWN, aligned_edge=LEFT, buff=0.3).next_to(mos_title, DOWN, buff=0.4)
-        
-        self.play(Write(mos_title), run_time=1.5)
-        self.wait(1)
-        self.play(LaggedStart(*[FadeIn(m, shift=UP) for m in mos_results], lag_ratio=0.3), run_time=4)
-        self.wait(3)
-        
-        # Preference
-        preference = Text(
-            "15 of 18 participants preferred enhanced version",
-            font_size=26,
-            color=ACCENT_BLUE,
-            weight=BOLD
-        ).to_edge(DOWN, buff=1.5)
-        
-        self.play(FadeIn(preference), run_time=2)
-        self.wait(3)
-        
-        # Citation
-        citation = Text(
-            "Données : ICNLSP 2025, p. 6",
-            font_size=18,
-            color=GRAY,
-            slant=ITALIC
-        ).to_corner(DR)
-        self.play(FadeIn(citation), run_time=1)
-        self.wait(2)
-        
-        # Clear
+        self.play(Write(title), run_time=self.T_TITLE_IN)
+        self.wait(self.T_TITLE_HOLD)
+
+        # ===== Study design =====
+        design = VGroup(
+            self.T("Study Design:",                   font_size=28, color=ACCENT_YELLOW, weight=BOLD),
+            self.T("• 18 participants",               font_size=24, color=TEXT_COLOR),
+            self.T("• 30 audio pairs (≈1 min each)",  font_size=24, color=TEXT_COLOR),
+            self.T("• Baseline vs SSML-enhanced",     font_size=24, color=TEXT_COLOR),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.30).next_to(title, DOWN, buff=0.55)
+
+        self.play(LaggedStart(*[FadeIn(s, shift=DOWN*0.15) for s in design], lag_ratio=0.20), run_time=self.T_DESIGN_IN)
+        self.wait(self.T_DESIGN_HOLD)
+
+        # sortir le bloc design proprement
+        self.play(FadeOut(design), run_time=self.T_DESIGN_OUT)
+        self.wait(self.T_GAP)
+
+        # ===== MOS block =====
+        mos_title = self.T("Mean Opinion Score (MOS)", font_size=32, color=ACCENT_YELLOW)
+        mos_title.next_to(title, DOWN, buff=0.55)
+
+        mos_list = VGroup(
+            self.T("• Baseline: 3.20",                     font_size=28, color=HI_GREY),
+            self.T("• Enhanced: 3.87  (+0.67, +20%)",      font_size=28, color=ACCENT_BLUE, weight=BOLD),
+            self.T("• p < 0.005  (statistically significant)", font_size=24, color=ACCENT_YELLOW, slant=ITALIC),
+        ).arrange(DOWN, aligned_edge=LEFT, buff=0.28).next_to(mos_title, DOWN, buff=0.35)
+
+        self.play(Write(mos_title), run_time=self.T_MOS_TITLE_IN)
+        self.wait(self.T_MOS_TITLE_H)
+        self.play(LaggedStart(*[FadeIn(m, shift=UP*0.10) for m in mos_list], lag_ratio=0.25),
+                  run_time=self.T_MOS_LIST_IN)
+        self.wait(self.T_MOS_LIST_H)
+
+        # ===== Preference line =====
+        pref = self.T("• 15 / 18 participants preferred the enhanced version",
+                      font_size=26, color=ACCENT_BLUE, weight=BOLD)
+        pref.to_edge(DOWN, buff=1.2)
+        self.play(FadeIn(pref, shift=UP*0.10), run_time=self.T_PREF_IN)
+        self.wait(self.T_PREF_HOLD)
+
+        # ===== Citation =====
+        citation = self.T("Données : ICNLSP 2025, p. 6", font_size=18, color=HI_GREY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=self.T_CIT_IN)
+        self.wait(self.T_CIT_HOLD)
+
+        # --- Sortie propre
         self.play(
-            FadeOut(title),
-            FadeOut(mos_title),
-            FadeOut(mos_results),
-            FadeOut(preference),
             FadeOut(citation),
-            run_time=2
+            FadeOut(pref),
+            FadeOut(mos_title),
+            FadeOut(mos_list),
+            FadeOut(title),
+            run_time=self.T_OUT
         )
-        self.wait(23)
+
+        # --- Padding auto pour atteindre exactement 60 s ---
+        spent = (
+            self.T_TITLE_IN + self.T_TITLE_HOLD +
+            self.T_DESIGN_IN + self.T_DESIGN_HOLD + self.T_DESIGN_OUT + self.T_GAP +
+            self.T_MOS_TITLE_IN + self.T_MOS_TITLE_H + self.T_MOS_LIST_IN + self.T_MOS_LIST_H +
+            self.T_PREF_IN + self.T_PREF_HOLD +
+            self.T_CIT_IN + self.T_CIT_HOLD +
+            self.T_OUT
+        )
+        pad = max(0.0, self.TARGET - spent)
+        self.wait(pad)
 
 
 # ============================================================================
