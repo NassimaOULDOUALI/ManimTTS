@@ -907,41 +907,102 @@ class ScenePipelineInteractive(Scene):
 # ============================================================================
 # SCENE 3B: Proposed Pipeline — Figure (Image) (~45s)
 # ============================================================================
+from manim import *
+from pathlib import Path
+
 class ScenePipelineFigure(Scene):
+    FONT_SANS = "DejaVu Sans"
+
+    def T(self, s, **kw):
+        kw.setdefault("font", self.FONT_SANS)
+        return Text(s, **kw)
+
+    def _load_image_or_placeholder(self, path: str, width_hint: float) -> Mobject:
+        p = Path(path)
+        if p.exists():
+            img = ImageMobject(str(p))
+            # normalise un peu la taille initiale
+            if img.width > width_hint:
+                img.width = width_hint
+            return img
+        # Fallback : placeholder discret (pas de “boîte” ; juste contours fins)
+        warn = self.T("assets/pipeline.png not found", font_size=22, color=RED, slant=ITALIC)
+        w, h = width_hint, width_hint * 0.56
+        frame = Rectangle(width=w, height=h, stroke_color=HI_GREY, stroke_width=2).set_opacity(0)
+        cross = VGroup(
+            Line(frame.get_corner(UL), frame.get_corner(DR)),
+            Line(frame.get_corner(UR), frame.get_corner(DL)),
+        ).set_color(HI_GREY).set_opacity(0.35)
+        ph = VGroup(frame, cross, warn).arrange(DOWN, buff=0.25)
+        return ph
+
     def construct(self):
-        title = Text("The Proposed Pipeline — Figure",
-                     font_size=46, color=ACCENT_BLUE, weight=BOLD).to_edge(UP, buff=0.45)
-        self.play(Write(title), run_time=1.0); self.wait(0.4)
+        # --- Titre (même police que partout)
+        title = self.T("The Proposed Pipeline — Figure",
+                       font_size=46, color=ACCENT_BLUE, weight=BOLD)
+        title.to_edge(UP, buff=0.45)
+        self.play(FadeIn(title, shift=DOWN*0.15), run_time=1.0)
+        self.wait(0.25)
 
-        # Ton image locale (assets/pipeline.png)
-        img = load_img("pipeline").scale(1.0)
-        # sécurité largeur
-        if img.width > config.frame_width * 1.04:
-            img.width = config.frame_width * 1.04
-        grp = Group(img).next_to(title, DOWN, buff=0.4)
+        # --- Chargement image (robuste)
+        # Mets ton chemin réel ici si différent :
+        img = self._load_image_or_placeholder("assets/pipeline.png", width_hint=config.frame_width * 0.92)
 
-        cap = Text("Overview of the full data & SSML pipeline",
-                   font_size=20, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC)\
-                   .next_to(grp, DOWN, buff=0.35)
+        # --- Caption (pré-créée pour estimer la place)
+        cap = self.T("Overview of the full data & SSML pipeline",
+                     font_size=20, color=HI_GREY, slant=ITALIC)
 
-        self.play(FadeIn(grp, shift=UP), run_time=1.0)
-        self.play(FadeIn(cap), run_time=0.4)
-        self.wait(2.0)
+        # --- Layout & auto-scale pour ne JAMAIS sortir du cadre
+        top_margin   = 0.60
+        bottom_space = 0.80
+        side_margin  = 0.60
 
-        # zoom léger + pan pour donner vie à la figure
-        self.play(grp.animate.scale(1.06).shift(UP*0.06), run_time=0.8)
-        self.wait(1.2)
+        # largeur/hauteur utiles sous le titre
+        max_w = config.frame_width  - 2*side_margin
+        max_h = config.frame_height - (title.height + top_margin + bottom_space + cap.height)
 
-        citation = Text("Figure: internal design (assets/pipeline.png)",
-                        font_size=18, color=HI_GREY if 'HI_GREY' in globals() else GRAY, slant=ITALIC)\
-                        .to_corner(DR)
-        self.play(FadeIn(citation), run_time=0.4); self.wait(0.8)
+        # on met d’abord l’image à une largeur “raisonnable”
+        img_width_target = min(max_w, config.frame_width * 0.92)
+        if hasattr(img, "width"):
+            if img.width > img_width_target:
+                img.width = img_width_target
 
-        self.play(FadeOut(citation, run_time=0.4))
-        self.play(FadeOut(cap, run_time=0.5),
-                  FadeOut(grp, run_time=0.6),
-                  FadeOut(title, run_time=0.6))
-        self.wait(0.4)
+        # si la hauteur dépasse, on scale proportionnellement
+        # (on a besoin du groupe pour mesurer hauteur avec caption)
+        grp = VGroup(img, cap).arrange(DOWN, buff=0.3, aligned_edge=CENTER)
+
+        # scale pour rentrer en hauteur/largeur
+        scale_factor = min(max_w / grp.width, max_h / grp.height, 1.0)
+        if scale_factor < 1.0:
+            grp.scale(scale_factor)
+
+        # position finale sous le titre
+        grp.next_to(title, DOWN, buff=0.5).to_edge(LEFT, buff=side_margin)
+
+        # --- Apparition
+        self.play(FadeIn(img, shift=UP*0.12), run_time=0.9)
+        self.play(FadeIn(cap, shift=UP*0.06), run_time=0.4)
+        self.wait(0.6)
+
+        # --- Ken Burns discret (scale + léger pan vertical)
+        # (sans MovingCameraScene, on anime le groupe)
+        self.play(grp.animate.scale(1.04).shift(UP*0.06), run_time=0.9)
+        self.wait(1.0)
+
+        # --- Citation en bas à droite
+        citation = self.T("Figure: internal design (assets/pipeline.png)",
+                          font_size=18, color=HI_GREY, slant=ITALIC).to_corner(DR)
+        self.play(FadeIn(citation), run_time=0.4)
+        self.wait(0.6)
+
+        # --- Sortie propre
+        self.play(
+            FadeOut(citation, run_time=0.4),
+            FadeOut(cap, run_time=0.5),
+            FadeOut(img, run_time=0.6),
+        )
+        self.play(FadeOut(title), run_time=0.6)
+        self.wait(0.3)
 
 
 # ============================================================================
