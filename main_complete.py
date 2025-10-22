@@ -399,6 +399,17 @@ PARAMS = [
 # Scène principale (multi-“slides” dans la même scène, pas de boîtes)
 # -------------------------------------------------------------------
 class SceneProsodyPrimer(Scene):
+    # Réglages de timing (ajuste ici pour ralentir/accélérer)
+    SLIDE_FADE_IN = 1.00      # apparition d'un slide (avant: 0.5)
+    EMPHASIS_IN   = 0.45      # apparition du soulignement du tag (avant: 0.25)
+    EMPHASIS_HOLD = 0.45      # respiration après l'emphase (avant: 0.25)
+    EMPHASIS_OUT  = 0.35      # disparition du soulignement (avant: 0.2)
+    DWELL_BASE    = 1.30      # temps de lecture additionnel sur chaque slide (avant: 0.3)
+    SLIDE_FADE_OUT= 0.70      # sortie d'un slide (avant: 0.35)
+
+    # Option: dwell par slide (Pitch, Loudness, Rate, Breaks). Si None, on utilise DWELL_BASE.
+    PER_SLIDE_DWELL = [1.6, 1.6, 1.6, 1.6]
+
     def construct(self):
         # --- Première page : habillage visible ---
         bg = subtle_background()
@@ -464,36 +475,38 @@ class SceneProsodyPrimer(Scene):
 
             # Colonne gauche uniquement (pas de colonne droite)
             left_col = VGroup(tag, row_what, row_ctrl, row_imp).arrange(DOWN, buff=0.24, aligned_edge=LEFT)
-            # Centré horizontalement pour un rendu propre quand il n'y a qu'une colonne
             left_col.to_edge(LEFT, buff=1.2).shift(DOWN*0.3)
 
-            # Slide = seulement la colonne gauche
             slide = VGroup(left_col)
             slide.set_opacity(0)
             slides.append(slide)
 
-        # --- Affichage séquentiel des slides (contenu pur) ---
+        # --- Affichage séquentiel des slides (contenu pur, ralenti) ---
         for i, slide in enumerate(slides):
+            # apparition du slide
             self.add(slide)
-            self.play(slide.animate.set_opacity(1), run_time=0.5)
+            self.play(slide.animate.set_opacity(1), run_time=self.SLIDE_FADE_IN)
 
-            # Accent léger : souligner le tag puis “respirer”
+            # Accent léger : souligner le tag, respiration, disparition
             tag_label = slide[0][0]  # chip(...)
             accent = Line(
                 tag_label.get_bottom()+DOWN*0.12+LEFT*0.1,
                 tag_label.get_bottom()+DOWN*0.12+RIGHT*0.1,
                 stroke_width=4
             ).set_color(PARAMS[i]["color"])
-            self.play(GrowFromCenter(accent), run_time=0.25)
-            self.wait(0.25)
-            self.play(FadeOut(accent), run_time=0.2)
+            self.play(GrowFromCenter(accent), run_time=self.EMPHASIS_IN)
+            self.wait(self.EMPHASIS_HOLD)
+            self.play(FadeOut(accent), run_time=self.EMPHASIS_OUT)
 
-            # (Plus d’exemple SSML ni de marker ici)
-            self.wait(0.3)
+            # Temps de lecture (dwell) plus long
+            dwell = (self.PER_SLIDE_DWELL[i]
+                     if self.PER_SLIDE_DWELL and i < len(self.PER_SLIDE_DWELL)
+                     else self.DWELL_BASE)
+            self.wait(dwell)
 
-            # Transition vers le slide suivant
+            # transition vers le slide suivant
             if i < len(slides) - 1:
-                self.play(slide.animate.set_opacity(0), run_time=0.35)
+                self.play(slide.animate.set_opacity(0), run_time=self.SLIDE_FADE_OUT)
                 self.remove(slide)
 
         # --- Conclusion compacte (pipeline) ---
@@ -514,9 +527,9 @@ class SceneProsodyPrimer(Scene):
             FadeIn(connector, shift=UP*0.2),
             FadeIn(steps, shift=UP*0.2),
             FadeIn(pipeline_title, shift=UP*0.2),
-            run_time=0.6
+            run_time=0.9
         )
-        self.wait(0.8)
+        self.wait(1.0)
 
         # Sortie propre
         self.play(
@@ -525,9 +538,8 @@ class SceneProsodyPrimer(Scene):
             FadeOut(connector),
             FadeOut(title),
             FadeOut(subtitle),
-            run_time=0.7
+            run_time=0.9
         )
-
 
 # ============================================================================
 # SCENE 2A: TTS Expressivity Problem (~35s)
