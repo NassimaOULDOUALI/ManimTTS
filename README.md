@@ -1,13 +1,13 @@
 
-# TTS & SSML Prosody Control - 10-Minute Manim Video
+# TTS & SSML Prosody Control - 6-Minute Manim Video
 
-This project creates a comprehensive 10-minute video presentation about "Improving French Synthetic Speech Quality via SSML Prosody Control" using Manim Community v0.18+.
+This project creates a comprehensive 5-6 -minute video presentation about "Improving French Synthetic Speech Quality via SSML Prosody Control" using Manim Community v0.18+.
 
 ## 📁 Project Structure
 
 ```
 tts_ssml_manim_video/
-├── main.py                 # Main Manim script with all scenes
+├── manim.py                 # Main Manim script with all scenes
 ├── assets/                 # Visual assets extracted from PPT
 │   ├── slide_20_img_8.png
 │   ├── slide_23_img_7.png
@@ -26,7 +26,7 @@ tts_ssml_manim_video/
 
 ## 🎬 Video Structure
 
-Total Duration: **600 seconds ± 15s (10 minutes)**
+Total Duration: **5-6 Minutes**
 
 ### Scene Breakdown
 
@@ -58,38 +58,38 @@ manim --version
 ### Generate the Full Video
 
 ```bash
-manim -pqh main.py Main -o video.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py Main -o video.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 ```
 
 ### Generate Individual Scenes
 
 ```bash
 # Scene 0: Introduction
-manim -pqh main.py SceneIntro -o intro.mp4 --format=mp4 --fps 30 --resolution 1920,1080
-
+manim -pqh manim SceneIntro -o intro.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+        
 # Scene 1: Audio Basics
-manim -pqh main.py SceneBasics -o basics.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py SceneBasics -o basics.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 
 # Scene 2: TTS Problem
-manim -pqh main.py SceneProblem -o problem.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py SceneProblem -o problem.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 
 # Scene 3: Pipeline
-manim -pqh main.py ScenePipeline -o pipeline.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py ScenePipeline -o pipeline.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 
 # Scene 4: Stage 1
-manim -pqh main.py SceneStage1 -o stage1.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py SceneStage1 -o stage1.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 
 # Scene 5: Stage 2
-manim -pqh main.py SceneStage2 -o stage2.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py SceneStage2 -o stage2.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 
 # Scene 6: Objective Evaluation
-manim -pqh main.py SceneEvalObj -o eval_obj.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py SceneEvalObj -o eval_obj.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 
 # Scene 7: Subjective Evaluation
-manim -pqh main.py SceneEvalSubj -o eval_subj.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py SceneEvalSubj -o eval_subj.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 
 # Scene 8: Conclusions
-manim -pqh main.py SceneOutro -o outro.mp4 --format=mp4 --fps 30 --resolution 1920,1080
+manim -pqh manim.py SceneOutro -o outro.mp4 --format=mp4 --fps 30 --resolution 1920,1080
 ```
 
 ### Command Options
@@ -104,9 +104,9 @@ manim -pqh main.py SceneOutro -o outro.mp4 --format=mp4 --fps 30 --resolution 19
 
 ### Theme Colors
 
-- **Background**: `#0b0f17` (dark blue-black)
-- **Accent Blue**: `#7cc5ff` (titles, highlights)
-- **Accent Yellow**: `#ffd166` (emphasis, numbers)
+- **Background**: `#004178` (dark blue-black)
+- **Accent Red**: `#FF0049` (titles, highlights)
+- **Accent Red**: `#FF0049` (emphasis, numbers)
 - **Text**: White
 
 ### Typography
@@ -165,6 +165,6 @@ This project is licensed under the MIT License.
 ---
 
 **Manim Version**: Community v0.18+
-**Duration**: 600s ± 15s
+**Duration**: 400s ± 15s
 **Resolution**: 1920x1080 @ 30fps
 **Format**: H.264 MP4
